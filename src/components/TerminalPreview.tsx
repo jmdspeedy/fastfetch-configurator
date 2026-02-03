@@ -67,10 +67,8 @@ export default function TerminalPreview() {
 
     // If line has no markers, render directly
     if (!line.includes('$')) {
-      // Logic check: should we persist state from previous line?
-      // Standard fastfetch might, but for now we assume per-line reset or simple logos.
-      // Actually, many logos start with whitespace then $1.
-      return <span key={lineIndex} className={currentColor}>{line}</span>;
+      // Use div to ensure line break, handle empty lines
+      return <div key={lineIndex} className={currentColor}>{line || '\u00A0'}</div>;
     }
 
     // Split by $1-$9 markers
