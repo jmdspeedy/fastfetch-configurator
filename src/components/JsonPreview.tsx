@@ -1,9 +1,12 @@
 'use client';
 
 import { useConfigStore, ModuleConfig } from '@/store/config';
+import { Copy, Check } from 'lucide-react';
+import { useState } from 'react';
 
 export default function JsonPreview() {
   const { modules, logo, display } = useConfigStore();
+  const [copied, setCopied] = useState(false);
 
   const generateConfig = () => {
     // 1. Clean modules (remove internal IDs)
@@ -18,7 +21,11 @@ export default function JsonPreview() {
     // 2. Construct full object
     const config = {
       $schema: 'https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json',
-      logo,
+      logo: { 
+        ...logo,
+        _presetName: undefined, // Remove internal flags
+        _customContent: undefined 
+      },
       display,
       modules: cleanModules,
     };
@@ -28,7 +35,8 @@ export default function JsonPreview() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generateConfig());
-    alert('Config copied to clipboard!');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -37,9 +45,10 @@ export default function JsonPreview() {
         <span className="text-xs font-mono uppercase tracking-wider text-gray-500">config.jsonc</span>
         <button 
           onClick={copyToClipboard}
-          className="text-xs hover:text-white transition-colors"
+          className="text-xs hover:text-white transition-colors flex items-center gap-1.5"
         >
-          Copy
+          {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+          {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
       <div className="flex-1 overflow-auto p-4 font-mono text-sm">

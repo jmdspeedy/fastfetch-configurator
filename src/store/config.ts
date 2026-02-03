@@ -67,6 +67,7 @@ interface ConfigState {
   setPresetLogo: (name: string) => void;
   setCustomLogo: (content: string) => void;
   updateDisplay: (updates: Partial<DisplayConfig>) => void;
+  resetConfig: () => void;
   loadConfig: (json: string) => void;
 }
 
@@ -149,7 +150,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
     logo: { 
       ...state.logo, 
       type: 'file', // Typically custom logos are loaded from file
-      source: '/path/to/logo.txt', // Placeholder
+      source: 'logo.txt', // Default reference for downloaded files
       _presetName: undefined,
       _customContent: content
     }
@@ -158,6 +159,12 @@ export const useConfigStore = create<ConfigState>((set) => ({
   updateDisplay: (updates) => set((state) => ({
     display: { ...state.display, ...updates }
   })),
+
+  resetConfig: () => set({
+    modules: defaultModules,
+    logo: { type: 'auto', padding: { top: 2, left: 2 }, _presetName: 'arch' },
+    display: { separator: '  ->  ', color: { keys: 'blue', title: 'blue' } }
+  }),
 
   loadConfig: (json) => {
     try {

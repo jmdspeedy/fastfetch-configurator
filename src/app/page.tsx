@@ -2,20 +2,25 @@ import ModuleList from '@/components/ModuleList';
 import JsonPreview from '@/components/JsonPreview';
 import TerminalPreview from '@/components/TerminalPreview';
 import AppearanceControls from '@/components/AppearanceControls';
+import HeaderControls from '@/components/HeaderControls';
 import { Settings } from 'lucide-react';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
       {/* Header */}
-      <header className="flex items-center gap-3 border-b border-gray-800 pb-6">
-        <div className="bg-blue-600 p-2 rounded-lg">
-          <Settings className="text-white" size={24} />
+      <header className="flex items-center justify-between border-b border-gray-800 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-lg">
+            <Settings className="text-white" size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Fastfetch Configurator</h1>
+            <p className="text-gray-500 text-sm">Visual editor for fastfetch configuration files</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Fastfetch Configurator</h1>
-          <p className="text-gray-500 text-sm">Visual editor for fastfetch configuration files</p>
-        </div>
+        
+        <HeaderControls />
       </header>
 
       {/* Main Grid */}
