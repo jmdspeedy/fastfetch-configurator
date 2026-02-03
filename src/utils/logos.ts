@@ -17,7 +17,7 @@ export const presetLogos: Record<string, string> = {
   \`/ossssso+/:-        -:/+osssso+-
  \`+sso+:-\`                 \`.-/+oso:
 \`++:.                           \`-/+/
-.\`                                 \`,
+.\`                                 \`/`,
   "debian": \`       _,met$$$$$$$$$$gg.
     ,g$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P.
   ,g$$$$P""       """Y$$$$.".
