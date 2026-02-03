@@ -1,20 +1,57 @@
-export const presetLogos: Record<string, string> = {
-  "arch": "                  -\\`\n                 .o+\\`\n                \\`ooo/\n               \\`+oooo:\n              \\`+oooooo:\n              -+oooooo+:\n            \\`/:-:++oooo+:\n           \\`/++++/+++++++:\n          \\`/++++++++++++++:\n         \\`/+++ooooooooooooo/\\`\n        ./ooosssso++osssssso+\\`\n       .oossssso-\\`\\`\\`\\`/ossssss+\\`\n      -osssssso.      :ssssssso.\n     :osssssss/        osssso+++.\n    /ossssssss/        +ssssooo/-\n  \\`/ossssso+/:-        -:/+osssso+-\n \\`+sso+:-\\`                 \\`.-/+oso:\n\\`++:.                           \\`-/+/\n.\\`                                 \\`/",
-  "debian": "        _,met$$$$$$$$$$gg.\n     ,g$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P.\n   ,g$$$$P\"\"       \"\"\"Y$$$$.\".\n  ,$$$$P'              \\`$$$$$$.\n',$$$$P       ,ggs.     \\`$$$$b:\n\\`d$$$$'     ,$P\"'   .    $$$$$$\n $$$$P      d$'     ,    $$$$P\n $$$$:      $$$.   -    ,d$$$$'\n $$$$;      Y$b._   _,d$P'\n Y$$$$.    \\`.\\`\"Y$$$$$$$$P\"'\n \\`$$$$b      \"-.__\n  \\`Y$$$$b\n   \\`Y$$$$.\n     \\`$$$$b.\n       \\`Y$$$$b.\n         \\`\"Y$$b._\n             \\`\"\"\"\"",
-  "ubuntu": "                             ....\n              .',:clooo:  .:looooo:.\n           .;looooooooc  .oooooooooo'\n        .;looooool:,''.  :ooooooooooc\n       ;looool;.         'oooooooooo,\n      ;clool'             .cooooooc.  ,,\n         ...                ......  .:oo,\n  .;clol:,.                        .loooo'\n :ooooooooo,                        'ooool\n'ooooooooooo.                        loooo.\n'ooooooooool                         coooo.\n ,loooooooc.                        .loooo.\n   .,;;;'.                          ;ooooc\n       ...                         ,ooool.\n    .cooooc.              ..',,'.  .cooo.\n      ;ooooo:.           ;oooooooc.  :l.\n       .coooooc,..      coooooooooo.\n         .:ooooooolc:. .ooooooooooo'\n           .':loooooo;  ,oooooooooc\n               ..';::c'  .;loooo:'",
-  "fedora": "             .',;::::;,'.\n         .';:cccccccccccc:;,.\n      .;cccccccccccccccccccccc;.\n    .:cccccccccccccccccccccccccc:.\n  .;ccccccccccccc;.:dddl:.;ccccccc;.\n .:ccccccccccccc;OWMKOOXMWd;ccccccc:.\n.:ccccccccccccc;KMMc;cc;xMMc;ccccccc:.\n,cccccccccccccc;MMM.;cc;;WW:;cccccccc,\n:cccccccccccccc;MMM.;cccccccccccccccc:\n:ccccccc;oxOOOo;MMM000k.;cccccccccccc:\ncccccc;0MMKxdd:;MMMkddc.;cccccccccccc;\nccccc;XMO';cccc;MMM.;cccccccccccccccc'\nccccc;MMo;ccccc;MMW.;ccccccccccccccc;\nccccc;0MNc.ccc.xMMd;ccccccccccccccc;\ncccccc;dNMWXXXWM0:;cccccccccccccc:,\ncccccccc;.:odl:.;cccccccccccccc:,.\nccccccccccccccccccccccccccccc:'.\n:ccccccccccccccccccccccc:;,..\n ':cccccccccccccccc::;,.",
-  "windows": "/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////\n/////////////////  /////////////////",
-  "apple": "                     ..'\n                 ,xNMM.\n               .OMMMMo\n               lMM\"\n     .;loddo:.  .olloddol;.\n   cKMMMMMMMMMMNWMMMMMMMMMM0:\n .KMMMMMMMMMMMMMMMMMMMMMMMWd.\n XMMMMMMMMMMMMMMMMMMMMMMMX.\n;MMMMMMMMMMMMMMMMMMMMMMMM:\n:MMMMMMMMMMMMMMMMMMMMMMMM:\n.MMMMMMMMMMMMMMMMMMMMMMMMX.\n kMMMMMMMMMMMMMMMMMMMMMMMMWd.\n 'XMMMMMMMMMMMMMMMMMMMMMMMMMMk\n  'XMMMMMMMMMMMMMMMMMMMMMMMMK.\n    kMMMMMMMMMMMMMMMMMMMMMMd\n     ;KMMMMMMMWXXWMMMMMMMk.\n       \"cooc*\"    \"*coo'\""
+import { allLogos, LogoDefinition } from '../data/allLogos';
+
+export const commonLogos = [
+  "Arch",
+  "Debian",
+  "Ubuntu",
+  "Fedora",
+  "Windows 11",
+  "macOS",
+  "Linux",
+  "Android",
+  "Pop!_OS",
+  "Manjaro",
+  "Mint",
+  "EndeavourOS",
+  "NixOS",
+  "Gentoo",
+  "Kali",
+  "OpenSUSE",
+  "Raspbian"
+];
+
+// Helper to normalize search
+const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export const getLogoData = (name: string): LogoDefinition | undefined => {
+  if (!name) return undefined;
+  
+  // Try exact match
+  let logo = allLogos.find(l => l.name === name);
+  if (logo) return logo;
+
+  // Try alias match
+  logo = allLogos.find(l => l.aliases.includes(name));
+  if (logo) return logo;
+
+  // Try normalized search
+  const search = normalize(name);
+  logo = allLogos.find(l => 
+    normalize(l.name) === search || 
+    l.aliases.some(a => normalize(a) === search)
+  );
+  
+  // Try finding by ID if name is something like "windows_11" vs "Windows 11"
+  // But my ID logic in generator was implicit.
+  
+  return logo;
 };
 
+// For backward compatibility if needed, or helper for color
 export const getLogoColor = (name: string): string => {
-  switch (name) {
-    case 'arch': return 'text-blue-500';
-    case 'debian': return 'text-red-500';
-    case 'ubuntu': return 'text-orange-500';
-    case 'fedora': return 'text-blue-600';
-    case 'windows': return 'text-blue-400';
-    case 'apple': return 'text-gray-400';
-    default: return 'text-gray-200';
+  const data = getLogoData(name);
+  if (data && data.colors.length > 0) {
+    return data.colors[0]; // Return primary color
   }
+  return 'text-gray-200';
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useConfigStore, ModuleConfig } from '@/store/config';
-import { presetLogos, getLogoColor } from '@/utils/logos';
+import { getLogoData } from '@/utils/logos';
 import clsx from 'clsx';
 
 // Mapping module types to dummy data
@@ -52,21 +52,47 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
 export default function TerminalPreview() {
   const { modules, logo, display } = useConfigStore();
 
-  // Determine Logo Content
-  let logoContent = '';
-  let logoColorClass = 'text-gray-200';
+  // Determine Logo Data
+  // Prefer explicit source, fallback to preset name (legacy), fallback to Arch
+  const logoName = logo.source || logo._presetName || 'Arch';
+  const logoData = getLogoData(logoName) || getLogoData('Arch');
 
-  if (logo._customContent) {
-    logoContent = logo._customContent;
-    logoColorClass = 'text-white'; // Custom logos usually have their own colors or are white
-  } else if (logo._presetName) {
-    logoContent = presetLogos[logo._presetName] || presetLogos['arch'];
-    logoColorClass = getLogoColor(logo._presetName);
-  } else {
-    // Default fallback
-    logoContent = presetLogos['arch'];
-    logoColorClass = getLogoColor('arch');
-  }
+  // Helper to render a single line of the logo with colors
+  const renderLogoLine = (line: string, lineIndex: number) => {
+    if (!logoData) return null;
+    const { colors } = logoData;
+
+    // Use first color as default if no markers
+    let currentColor = colors[0] || 'text-gray-200';
+
+    // If line has no markers, render directly
+    if (!line.includes('$')) {
+      // Logic check: should we persist state from previous line?
+      // Standard fastfetch might, but for now we assume per-line reset or simple logos.
+      // Actually, many logos start with whitespace then $1.
+      return <span key={lineIndex} className={currentColor}>{line}</span>;
+    }
+
+    // Split by $1-$9 markers
+    const parts = line.split(/(\$[1-9])/g);
+    
+    return (
+      <div key={lineIndex} className="whitespace-pre">
+        {parts.map((part, i) => {
+          // If part is a marker, update current color
+          if (part.match(/^\$[1-9]$/)) {
+            const colorIndex = parseInt(part[1]) - 1;
+            currentColor = colors[colorIndex] || 'text-gray-200';
+            return null; // Don't render the marker
+          }
+          // If empty part (e.g. string starts with marker), skip
+          if (!part) return null;
+
+          return <span key={i} className={currentColor}>{part}</span>;
+        })}
+      </div>
+    );
+  };
 
   const separator = display.separator || ': ';
   const keyColor = display.color?.keys || 'blue';
@@ -98,8 +124,12 @@ export default function TerminalPreview() {
       <div className="p-6 text-gray-300 overflow-auto">
         <div className="flex gap-6">
           {/* Logo */}
-          <div className={clsx("font-bold whitespace-pre leading-tight select-none", logoColorClass)}>
-            {logoContent}
+          <div className="font-bold whitespace-pre leading-tight select-none">
+            {logo._customContent ? (
+               <span className="text-white">{logo._customContent}</span>
+            ) : (
+               logoData?.ascii.split('\n').map((line, i) => renderLogoLine(line, i))
+            )}
           </div>
           
           {/* Info Modules */}
