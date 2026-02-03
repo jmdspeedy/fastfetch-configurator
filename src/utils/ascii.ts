@@ -25,22 +25,35 @@ export function convertImageToAscii(
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
-        const chars = '@%#*+=-:. ';
+        // Density string from dark to light
+        const chars = '@%#*+=-:. '; 
         let ascii = '';
 
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          const avg = (r + g + b) / 3;
-          
-          const charIndex = Math.floor((avg / 255) * (chars.length - 1));
-          ascii += chars[chars.length - 1 - charIndex];
+          const a = data[i + 3];
+
+          // Skip fully transparent pixels
+          if (a === 0) {
+             ascii += ' ';
+          } else {
+            const avg = (r + g + b) / 3;
+            const charIndex = Math.floor((avg / 255) * (chars.length - 1));
+            const char = chars[chars.length - 1 - charIndex];
+            
+            // ANSI TrueColor: \x1b[38;2;R;G;Bm
+            ascii += `\x1b[38;2;${r};${g};${b}m${char}`;
+          }
 
           if ((i / 4 + 1) % width === 0) {
-            ascii += '\n';
+            ascii += '\x1b[0m\n'; // Reset color at end of line
           }
         }
+        
+        // Reset at the very end just in case
+        ascii += '\x1b[0m';
 
         resolve(ascii);
       };

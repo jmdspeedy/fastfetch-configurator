@@ -3,6 +3,7 @@
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { getLogoData } from '@/utils/logos';
 import clsx from 'clsx';
+import Ansi from 'ansi-to-react';
 
 // Mapping module types to dummy data
 const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ') => {
@@ -124,7 +125,7 @@ export default function TerminalPreview() {
           {/* Logo */}
           <div className="font-bold whitespace-pre leading-tight select-none">
             {logo._customContent ? (
-               <span className="text-white">{logo._customContent}</span>
+               <Ansi>{logo._customContent}</Ansi>
             ) : (
                logoData?.ascii.split('\n').map((line, i) => renderLogoLine(line, i))
             )}
