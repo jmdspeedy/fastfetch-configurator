@@ -1,6 +1,7 @@
 import ModuleList from '@/components/ModuleList';
 import JsonPreview from '@/components/JsonPreview';
 import TerminalPreview from '@/components/TerminalPreview';
+import AppearanceControls from '@/components/AppearanceControls';
 import { Settings } from 'lucide-react';
 
 export default function Home() {
@@ -22,11 +23,18 @@ export default function Home() {
         
         {/* Left Column: Controls */}
         <div className="lg:col-span-3 flex flex-col gap-6 min-h-0">
-          <div className="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 shadow-lg flex-1 overflow-hidden flex flex-col">
+          
+          {/* Modules Panel */}
+          <div className="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 shadow-lg flex-1 overflow-hidden flex flex-col min-h-[300px]">
             <h2 className="text-lg font-semibold mb-4 text-white">Modules</h2>
             <div className="flex-1 overflow-hidden">
               <ModuleList />
             </div>
+          </div>
+
+          {/* Appearance Panel */}
+          <div className="flex-1 min-h-[300px]">
+            <AppearanceControls />
           </div>
         </div>
 

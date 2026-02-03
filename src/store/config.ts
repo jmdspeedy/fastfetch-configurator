@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import { presetLogos } from '@/utils/logos';
 
 export type ModuleType = 
   | 'Title' | 'Separator' | 'OS' | 'Host' | 'Kernel' | 'Uptime' | 'Packages' | 'Shell' 
@@ -21,7 +22,7 @@ export interface ModuleConfig {
 }
 
 export interface LogoConfig {
-  type: 'auto' | 'builtin' | 'file' | 'data' | 'raw' | 'sixel' | 'kitty' | 'iterm' | 'chafa';
+  type: 'auto' | 'builtin' | 'file' | 'data' | 'raw' | 'sixel' | 'kitty' | 'iterm' | 'chafa' | 'small';
   source?: string;
   width?: number;
   height?: number;
@@ -34,6 +35,9 @@ export interface LogoConfig {
   color?: {
     [key: string]: string;
   };
+  // Store internal state for preview
+  _presetName?: string; 
+  _customContent?: string; 
   [key: string]: any;
 }
 
@@ -60,6 +64,8 @@ interface ConfigState {
   updateModule: (id: string, updates: Partial<ModuleConfig>) => void;
   reorderModules: (newOrder: ModuleConfig[]) => void;
   updateLogo: (updates: Partial<LogoConfig>) => void;
+  setPresetLogo: (name: string) => void;
+  setCustomLogo: (content: string) => void;
   updateDisplay: (updates: Partial<DisplayConfig>) => void;
   loadConfig: (json: string) => void;
 }
@@ -100,7 +106,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
   modules: defaultModules,
   logo: {
     type: 'auto',
-    padding: { top: 2, left: 2 }
+    padding: { top: 2, left: 2 },
+    _presetName: 'arch'
   },
   display: {
     separator: '  ->  ',
@@ -128,12 +135,46 @@ export const useConfigStore = create<ConfigState>((set) => ({
     logo: { ...state.logo, ...updates }
   })),
 
+  setPresetLogo: (name) => set((state) => ({
+    logo: { 
+      ...state.logo, 
+      type: 'auto', // Reset to auto/builtin for presets
+      source: undefined,
+      _presetName: name,
+      _customContent: undefined
+    }
+  })),
+
+  setCustomLogo: (content) => set((state) => ({
+    logo: { 
+      ...state.logo, 
+      type: 'file', // Typically custom logos are loaded from file
+      source: '/path/to/logo.txt', // Placeholder
+      _presetName: undefined,
+      _customContent: content
+    }
+  })),
+
   updateDisplay: (updates) => set((state) => ({
     display: { ...state.display, ...updates }
   })),
 
   loadConfig: (json) => {
-    // Implementation for importing JSON would go here
-    console.log("Loading config not yet fully implemented", json);
+    try {
+      const parsed = JSON.parse(json);
+      // Basic validation/migration logic would be needed here
+      // For now, just a direct set if structure matches
+      set({
+        logo: parsed.logo || { type: 'auto', _presetName: 'arch' },
+        display: parsed.display || {},
+        modules: parsed.modules?.map((m: any) => ({
+          ...m, 
+          id: uuidv4(), 
+          type: typeof m === 'string' ? m : m.type 
+        })) || defaultModules
+      });
+    } catch (e) {
+      console.error("Failed to load config", e);
+    }
   }
 }));
