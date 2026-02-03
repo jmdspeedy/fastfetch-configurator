@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { presetLogos } from '@/utils/logos';
 
 export type ModuleType = 
   | 'Title' | 'Separator' | 'OS' | 'Host' | 'Kernel' | 'Uptime' | 'Packages' | 'Shell' 
