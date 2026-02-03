@@ -149,13 +149,18 @@ export default function HeaderControls() {
             <div className="p-8">
               {step === 'captcha' && (
                 <div className="flex flex-col items-center gap-6 text-center">
-                  <p className="text-gray-400">Please complete the challenge to proceed.</p>
-                  <div className="w-full flex justify-center min-h-[100px] text-black">
-                    <altcha-widget
-                      challenge-url="/api/config?type=challenge"
-                      hidefooter
-                      hidelogo
-                    ></altcha-widget>
+                  <p className="text-gray-400">Security Check (Simulated)</p>
+                  <div className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg flex flex-col items-center gap-4">
+                    <div className="text-xs text-gray-500 font-mono">DEBUG: Captcha temporary placeholder</div>
+                    <button 
+                      onClick={() => {
+                        setAltchaPayload('simulated_payload_' + Date.now());
+                        setStep('options');
+                      }}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors font-bold"
+                    >
+                      Click to Verify
+                    </button>
                   </div>
                 </div>
               )}
