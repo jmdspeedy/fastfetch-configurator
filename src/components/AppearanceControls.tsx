@@ -37,6 +37,8 @@ export default function AppearanceControls() {
     try {
       const ascii = await convertImageToAscii(file, 40); // 40 chars width
       setCustomLogo(ascii);
+      // Reset input value to allow re-selection
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error('Failed to convert image', err);
       alert('Failed to convert image to ASCII');

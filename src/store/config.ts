@@ -8,7 +8,12 @@ export type ModuleType =
   | 'Battery' | 'PowerAdapter' | 'Player' | 'Media' | 'LocalIP' | 'PublicIP' 
   | 'Wifi' | 'DateTime' | 'Locale' | 'Vulkan' | 'OpenGL' | 'OpenCL' | 'Users' 
   | 'Bluetooth' | 'Sound' | 'Gamepad' | 'Weather' | 'NetIO' | 'DiskIO' 
-  | 'PhysicalDisk' | 'Version' | 'Break' | 'Colors' | 'Command';
+  | 'PhysicalDisk' | 'Version' | 'Break' | 'Colors' | 'Command'
+  | 'BIOS' | 'BluetoothRadio' | 'Board' | 'Bootmgr' | 'Brightness' | 'Btrfs'
+  | 'Camera' | 'Chassis' | 'CPUCache' | 'CPUUsage' | 'Custom' | 'DNS'
+  | 'Editor' | 'InitSystem' | 'Keyboard' | 'LM' | 'Loadavg' | 'Logo'
+  | 'Monitor' | 'Mouse' | 'PhysicalMemory' | 'Processes' | 'TerminalSize'
+  | 'TerminalTheme' | 'TPM' | 'Wallpaper' | 'Zpool';
 
 export interface ModuleConfig {
   id: string; // Internal ID for drag-and-drop
