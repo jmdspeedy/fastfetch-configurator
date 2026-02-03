@@ -1,27 +1,27 @@
 export const presetLogos: Record<string, string> = {
-  "arch": \`                   -
-                 .o+
-                .ooo/
-               .ooooo:
-              .ooooooo:
+  "arch": \`                   -\`
+                 .o+\`
+                \`ooo/
+               \`+oooo:
+              \`+oooooo:
               -+oooooo+:
-            ./:-:++oooo+:
-           ./++++/+++++++:
-          ./++++++++++++++:
-         ./+++ooooooooooooo/
-        ./ooosssso++osssssso+
-       .oossssso-\`\`\`\`/ossssss+
+            \`/:-:++oooo+:
+           \`/++++/+++++++:
+          \`/++++++++++++++:
+         \`/+++ooooooooooooo/\`
+        ./ooosssso++osssssso+\`
+       .oossssso-\`\`\`\`/ossssss+\`
       -osssssso.      :ssssssso.
      :osssssss/        osssso+++.
     /ossssssss/        +ssssooo/-
-  ./ossssso+/:-        -:/+osssso+-
- .sso+:-                 .-/+oso:
-.++:.                           -/+/
-.                                 /\`,
+  \`/ossssso+/:-        -:/+osssso+-
+ \`+sso+:-\`                 \`.-/+oso:
+\`++:.                           \`-/+/
+.\`                                 \`,
   "debian": \`       _,met$$$$$$$$$$gg.
     ,g$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P.
   ,g$$$$P""       """Y$$$$.".
- ,$$$$P'              \`$$$$$$.
+  ,$$$$P'              \`$$$$$$.
 ',$$$$P       ,ggs.     \`$$$$b:
 \`d$$$$'     ,$P"'   .    $$$$$$
  $$$$P      d$'     ,    $$$$P
