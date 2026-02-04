@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://fastfetch.jameswu.me"),
+  verification: {
+    google: "RwKszzbo-RHE3U90kCA9-fh5-8qYCbCoQr1Cmu5n_Rk",
+  },
   title: "Fastfetch Configurator | Custom Fastfetch Preset Generator",
   description: "Create and deploy beautiful Fastfetch configurations with our interactive builder. Customize modules, logos, and appearance with a real-time terminal preview.",
   keywords: ["fastfetch", "configurator", "terminal", "linux", "customization", "cli", "dotfiles"],
