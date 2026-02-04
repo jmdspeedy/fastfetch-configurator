@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://fastfetch.jameswu.me"),
   title: "Fastfetch Configurator | Custom Fastfetch Preset Generator",
   description: "Create and deploy beautiful Fastfetch configurations with our interactive builder. Customize modules, logos, and appearance with a real-time terminal preview.",
   keywords: ["fastfetch", "configurator", "terminal", "linux", "customization", "cli", "dotfiles"],
@@ -29,9 +30,9 @@ export const metadata: Metadata = {
     url: "https://fastfetch.jameswu.me", 
     images: [
       {
-        url: "/logo.svg",
-        width: 512,
-        height: 512,
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
         alt: "Fastfetch Configurator Logo",
       },
     ],
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fastfetch Configurator",
     description: "Build your perfect Fastfetch config in seconds.",
-    images: ["/logo.svg"],
+    images: ["/og-image.png"],
   }
 };
 
