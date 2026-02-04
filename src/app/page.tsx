@@ -11,9 +11,7 @@ export default function Home() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-800 pb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <Settings className="text-white" size={24} />
-          </div>
+          <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Fastfetch Configurator</h1>
             <p className="text-gray-500 text-sm">Visual editor for fastfetch configuration files</p>
