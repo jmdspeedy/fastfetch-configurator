@@ -25,13 +25,9 @@ export async function GET(req: NextRequest) {
   const id = searchParams.get('id');
   const type = searchParams.get('type'); // 'config', 'logo', 'install', or 'challenge'
 
-  // Altcha Challenge Generation
+  // Altcha Challenge Generation (Deprecated - Turnstile handles this client-side)
   if (type === 'challenge') {
-    const challenge = await createChallenge({
-        hmacKey: ALTCHA_HMAC_KEY,
-        expires: new Date(Date.now() + 300000), // 5 minutes
-    });
-    return NextResponse.json(challenge);
+    return NextResponse.json({ error: 'Deprecated' }, { status: 410 });
   }
 
   if (!id || !tempStorage.has(id)) {
