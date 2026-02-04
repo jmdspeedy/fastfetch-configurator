@@ -51,6 +51,29 @@ export default function Home() {
           <JsonPreview />
         </div>
       </div>
+
+      {/* SEO Content Section */}
+      <section className="mt-12 border-t border-gray-800 pt-12 max-w-4xl mx-auto pb-12">
+        <h2 className="text-xl font-bold mb-6 text-white text-center">Fastfetch Configuration FAQ</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-gray-400 text-sm">
+          <div>
+            <h3 className="text-blue-400 font-semibold mb-2">What is a Fastfetch Configurator?</h3>
+            <p>It is a visual tool that helps Linux users generate a <code>config.jsonc</code> file for Fastfetch. Instead of manually editing code in a terminal, you can use our interactive editor to customize your system fetch display with a real-time preview.</p>
+          </div>
+          <div>
+            <h3 className="text-blue-400 font-semibold mb-2">How do I change the Fastfetch logo?</h3>
+            <p>Our generator includes a logo gallery with over 100 built-in distribution icons (Arch, Fedora, Ubuntu, etc.). You can also upload custom images which are converted into ASCII art optimized for your terminal size.</p>
+          </div>
+          <div>
+            <h3 className="text-blue-400 font-semibold mb-2">How do I install the generated config?</h3>
+            <p>Simply click "Deploy Config" and run the generated one-line command in your terminal. It handles the <code>mkdir</code> and file placement for <code>~/.config/fastfetch/config.jsonc</code> automatically.</p>
+          </div>
+          <div>
+            <h3 className="text-blue-400 font-semibold mb-2">Fastfetch vs Neofetch?</h3>
+            <p>Fastfetch is a modern, high-performance replacement for Neofetch, written in C. It is significantly faster and supports more modern protocols like Sixel and Kitty graphics for logos.</p>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
