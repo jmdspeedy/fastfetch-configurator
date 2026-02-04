@@ -47,19 +47,16 @@ export default function HeaderControls() {
   };
 
   useEffect(() => {
-    const handleStateChange = (e: any) => {
-      // Altcha emits 'verified' event when challenge is solved
-      if (e.detail?.payload) {
-        setAltchaPayload(e.detail.payload);
+    const handleTurnstile = (e: any) => {
+      if (e.detail?.token) {
+        setAltchaPayload(e.detail.token);
         setStep('options');
       }
     };
 
-    window.addEventListener('verified', handleStateChange);
-    window.addEventListener('statechange', handleStateChange);
+    window.addEventListener('turnstile-verified' as any, handleTurnstile);
     return () => {
-      window.removeEventListener('verified', handleStateChange);
-      window.removeEventListener('statechange', handleStateChange);
+      window.removeEventListener('turnstile-verified' as any, handleTurnstile);
     };
   }, []);
 
@@ -149,18 +146,21 @@ export default function HeaderControls() {
             <div className="p-8">
               {step === 'captcha' && (
                 <div className="flex flex-col items-center gap-6 text-center">
-                  <p className="text-gray-400">Security Check (Simulated)</p>
-                  <div className="w-full p-4 bg-gray-900 border border-gray-800 rounded-lg flex flex-col items-center gap-4">
-                    <div className="text-xs text-gray-500 font-mono">DEBUG: Captcha temporary placeholder</div>
-                    <button 
-                      onClick={() => {
-                        setAltchaPayload('simulated_payload_' + Date.now());
-                        setStep('options');
-                      }}
-                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors font-bold"
-                    >
-                      Click to Verify
-                    </button>
+                  <p className="text-gray-400">Security Check</p>
+                  <div className="w-full flex justify-center min-h-[65px]">
+                    <div 
+                      className="cf-turnstile" 
+                      data-sitekey="0x4AAAAAACXeni-B13oSbn93" 
+                      data-callback="onTurnstileSuccess"
+                      data-theme="dark"
+                    ></div>
+                    <script dangerouslySetInnerHTML={{
+                      __html: `
+                        window.onTurnstileSuccess = function(token) {
+                          window.dispatchEvent(new CustomEvent('turnstile-verified', { detail: { token } }));
+                        };
+                      `
+                    }} />
                   </div>
                 </div>
               )}

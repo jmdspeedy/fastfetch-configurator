@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { createChallenge, verifySolution } from 'altcha-lib';
 
 // In-memory store (volatile on serverless, but works for short-lived spikes)
 const tempStorage = new Map<string, { config: string, logo?: string, expires: number }>();
 
-// Simple Altcha Secret (In production, use an environment variable)
-const ALTCHA_HMAC_KEY = process.env.ALTCHA_HMAC_KEY || 'default_fastfetch_secret_key_123';
+const TURNSTILE_SECRET_KEY = '0x4AAAAAACXenvHBR2zHzCy36OonqAL0SVI';
 
-// Cleanup expired items every minute
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [id, data] of tempStorage.entries()) {
-      if (now > data.expires) tempStorage.delete(id);
-    }
-  }, 60000);
+async function verifyTurnstile(token: string) {
+  const formData = new FormData();
+  formData.append('secret', TURNSTILE_SECRET_KEY);
+  formData.append('response', token);
+
+  const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    body: formData,
+    method: 'POST',
+  });
+
+  const outcome = await result.json();
+  return outcome.success;
 }
 
 export async function GET(req: NextRequest) {
@@ -78,13 +80,12 @@ export async function POST(req: NextRequest) {
   try {
     const { config, logo, altchaPayload } = await req.json();
 
-    // Verify Altcha Solution
+    // Verify Turnstile Token
     if (!altchaPayload) {
       return NextResponse.json({ error: 'Captcha required' }, { status: 400 });
     }
 
-    // Bypass verification for simulated payload
-    const isValid = altchaPayload.startsWith('simulated_payload_') || await verifySolution(altchaPayload, ALTCHA_HMAC_KEY);
+    const isValid = await verifyTurnstile(altchaPayload);
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid captcha solution' }, { status: 400 });
     }
