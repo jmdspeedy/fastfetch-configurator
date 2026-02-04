@@ -2,13 +2,11 @@
 
 import { useConfigStore } from '@/store/config';
 import { Download, RotateCcw, Check, ShieldCheck, Terminal, Copy, X } from 'lucide-react';
-import { useState, useEffect, createElement } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'altcha-widget': any;
-    }
+  interface Window {
+    turnstile: any;
   }
 }
 
@@ -20,6 +18,8 @@ export default function HeaderControls() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [altchaPayload, setAltchaPayload] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
 
   const generateConfigString = () => {
     const cleanModules = modules.map(({ id, ...rest }) => {
@@ -47,18 +47,28 @@ export default function HeaderControls() {
   };
 
   useEffect(() => {
-    const handleTurnstile = (e: any) => {
-      if (e.detail?.token) {
-        setAltchaPayload(e.detail.token);
-        setStep('options');
+    if (showModal && step === 'captcha' && turnstileRef.current && window.turnstile) {
+      if (widgetId.current) {
+        window.turnstile.remove(widgetId.current);
+      }
+      
+      widgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: '0x4AAAAAACXeni-B13oSbn93',
+        theme: 'dark',
+        callback: (token: string) => {
+          setAltchaPayload(token);
+          setStep('options');
+        },
+      });
+    }
+
+    return () => {
+      if (widgetId.current && window.turnstile) {
+        window.turnstile.remove(widgetId.current);
+        widgetId.current = null;
       }
     };
-
-    window.addEventListener('turnstile-verified' as any, handleTurnstile);
-    return () => {
-      window.removeEventListener('turnstile-verified' as any, handleTurnstile);
-    };
-  }, []);
+  }, [showModal, step]);
 
   const handleQuickInstall = async () => {
     if (!altchaPayload) return;
@@ -147,20 +157,8 @@ export default function HeaderControls() {
               {step === 'captcha' && (
                 <div className="flex flex-col items-center gap-6 text-center">
                   <p className="text-gray-400">Security Check</p>
-                  <div className="w-full flex justify-center min-h-[65px]">
-                    <div 
-                      className="cf-turnstile" 
-                      data-sitekey="0x4AAAAAACXeni-B13oSbn93" 
-                      data-callback="onTurnstileSuccess"
-                      data-theme="dark"
-                    ></div>
-                    <script dangerouslySetInnerHTML={{
-                      __html: `
-                        window.onTurnstileSuccess = function(token) {
-                          window.dispatchEvent(new CustomEvent('turnstile-verified', { detail: { token } }));
-                        };
-                      `
-                    }} />
+                  <div className="w-full flex justify-center min-h-[65px]" ref={turnstileRef}>
+                    {/* Turnstile widget renders here */}
                   </div>
                 </div>
               )}
