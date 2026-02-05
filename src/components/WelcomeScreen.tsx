@@ -131,14 +131,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                     </div>
                 ) : (
                     <div className="max-w-2xl mx-auto bg-[#161616] border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="mb-6">
                             <h3 className="text-xl font-semibold text-white">Import Configuration</h3>
-                            <button
-                                onClick={() => setImportMode(false)}
-                                className="text-gray-500 hover:text-white transition-colors text-sm"
-                            >
-                                Cancel
-                            </button>
                         </div>
 
                         <div className="mb-6 flex gap-3">
