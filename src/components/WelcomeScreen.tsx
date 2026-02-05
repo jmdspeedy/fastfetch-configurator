@@ -84,7 +84,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                                 Begin with a clean, standard configuration featuring popular modules. Perfect for new users or fresh starts.
                             </p>
-                            <div className="mt-auto flex items-center text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                            <div className="mt-auto flex items-center text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0">
                                 Create new config <ArrowRight className="w-4 h-4 ml-2" />
                             </div>
                         </button>
@@ -124,7 +124,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
                                 Already have a configuration? Upload your JSON config file or paste it to edit and visualize it in the editor.
                             </p>
-                            <div className="mt-auto flex items-center text-violet-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                            <div className="mt-auto flex items-center text-violet-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0">
                                 Import existing <ArrowRight className="w-4 h-4 ml-2" />
                             </div>
                         </div>
