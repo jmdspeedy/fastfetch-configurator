@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     title: "Fastfetch Configurator",
     description: "Interactive Fastfetch configuration builder with live preview.",
     type: "website",
-    url: "https://fastfetch.jameswu.me", 
+    url: "https://fastfetch.jameswu.me",
     images: [
       {
         url: "/og-image.png",
@@ -67,6 +67,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
         <Analytics />
