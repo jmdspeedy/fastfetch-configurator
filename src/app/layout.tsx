@@ -18,17 +18,17 @@ export const metadata: Metadata = {
   verification: {
     google: "RwKszzbo-RHE3U90kCA9-fh5-8qYCbCoQr1Cmu5n_Rk",
   },
-  title: "Fastfetch Configurator | Custom Fastfetch Preset Generator",
-  description: "Create and deploy beautiful Fastfetch configurations with our interactive builder. Customize modules, logos, and appearance with a real-time terminal preview.",
-  keywords: ["fastfetch", "configurator", "terminal", "linux", "customization", "cli", "dotfiles"],
+  title: "Fastfetch Visual Configurator | GUI Preset Generator",
+  description: "Visually create, customize, and config Fastfetch presets with an interactive builder and real-time terminal preview. Generate and deploy beautiful Fastfetch configurations.",
+  keywords: ["fastfetch", "config", "configurator", "visual", "builder", "generator", "terminal", "linux", "customization", "cli", "dotfiles", "preset"],
   authors: [{ name: "James" }],
   icons: {
     icon: "/logo.svg",
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "Fastfetch Configurator",
-    description: "Interactive Fastfetch configuration builder with live preview.",
+    title: "Fastfetch Visual Configurator",
+    description: "The easiest way to configure Fastfetch. A visual, interactive builder with live preview.",
     type: "website",
     url: "https://fastfetch.jameswu.me",
     images: [
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Fastfetch Configurator Logo",
+        alt: "Fastfetch Visual Configurator",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fastfetch Configurator",
-    description: "Build your perfect Fastfetch config in seconds.",
+    title: "Fastfetch Visual Configurator",
+    description: "Build and config your perfect Fastfetch preset in seconds with a visual GUI.",
     images: ["/og-image.png"],
   }
 };
@@ -56,6 +56,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "url": "https://fastfetch.jameswu.me",
+            "logo": "https://fastfetch.jameswu.me/logo.svg"
+          }) }}
+        />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
         <style>{`
           altcha-widget {
