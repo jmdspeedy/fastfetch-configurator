@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   title: "Fastfetch Visual Configurator | GUI Preset Generator",
   description: "Visually create, customize, and config Fastfetch presets with an interactive builder and real-time terminal preview. Generate and deploy beautiful Fastfetch configurations.",
-  keywords: ["fastfetch", "config", "configurator", "visual", "builder", "generator", "terminal", "linux", "customization", "cli", "dotfiles", "preset"],
+  keywords: ["fastfetch", "config", "configure", "setup", "configurator", "visual", "GUI", "web-ui", "builder", "editor", "generator", "preset", "themes", "style", "customization", "modules", "terminal", "shell", "linux", "macos", "windows", "cli", "dotfiles", "ricing", "system-information", "neofetch-alternative"],
   authors: [{ name: "James" }],
   icons: {
     icon: "/logo.svg",
