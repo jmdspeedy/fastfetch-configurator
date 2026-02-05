@@ -17,16 +17,16 @@ export default function Home() {
             <p className="text-gray-500 text-sm">Visual editor for fastfetch configuration files</p>
           </div>
         </div>
-        
+
         <HeaderControls />
       </header>
 
       {/* Main Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
-        
+
         {/* Left Column: Controls */}
         <div className="lg:col-span-3 flex flex-col gap-6 min-h-0">
-          
+
           {/* Modules Panel */}
           <div className="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 shadow-lg flex-1 overflow-hidden flex flex-col min-h-[300px]">
             <h2 className="text-lg font-semibold mb-4 text-white">Modules</h2>
@@ -35,9 +35,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Appearance Panel */}
+          {/* Config Preview Panel */}
           <div className="flex-1 min-h-[300px]">
-            <AppearanceControls />
+            <JsonPreview />
           </div>
         </div>
 
@@ -46,9 +46,9 @@ export default function Home() {
           <TerminalPreview />
         </div>
 
-        {/* Right Column: Code Preview */}
+        {/* Right Column: Appearance */}
         <div className="lg:col-span-3 flex flex-col min-h-0">
-          <JsonPreview />
+          <AppearanceControls />
         </div>
       </div>
 
