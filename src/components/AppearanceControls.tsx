@@ -7,7 +7,7 @@ import { convertImageToAscii } from '@/utils/ascii';
 import { useRef, useState, useMemo } from 'react';
 import { Upload, Image as ImageIcon, Search } from 'lucide-react';
 
-const colors = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'black', 'default'];
+import ColorPicker from './ColorPicker';
 
 export default function AppearanceControls() {
   const { logo, setPresetLogo, setCustomLogo, display, updateDisplay } = useConfigStore();
@@ -77,8 +77,8 @@ export default function AppearanceControls() {
                 key={name}
                 onClick={() => handleLogoSelect(name)}
                 className={`p-2 text-xs font-mono capitalize rounded border truncate transition-colors ${(logo._presetName === name) && !logo._customContent
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
+                  ? 'bg-blue-600 border-blue-500 text-white'
+                  : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
                   }`}
                 title={name}
               >
@@ -106,8 +106,8 @@ export default function AppearanceControls() {
                       key={l.name}
                       onClick={() => handleLogoSelect(l.name)}
                       className={`text-left px-3 py-1.5 text-xs rounded transition-colors ${(logo._presetName === l.name) && !logo._customContent
-                          ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
-                          : 'text-gray-400 hover:bg-gray-800'
+                        ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
+                        : 'text-gray-400 hover:bg-gray-800'
                         }`}
                     >
                       {l.name}
@@ -152,19 +152,35 @@ export default function AppearanceControls() {
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Key Color</label>
-            <div className="flex flex-wrap gap-2">
-              {colors.map(c => (
-                <button
-                  key={c}
-                  onClick={() => updateDisplay({ color: { ...display.color, keys: c } })}
-                  className={`w-6 h-6 rounded-full border-2 transition-transform ${display.color?.keys === c ? 'border-white scale-110' : 'border-transparent'
-                    }`}
-                  style={{ backgroundColor: c === 'default' ? '#555' : c === 'black' ? '#000' : c === 'magenta' ? '#d04497' : c }}
-                  title={c}
-                />
-              ))}
-            </div>
+            <ColorPicker
+              label="Keys Color"
+              value={display.color?.keys}
+              onChange={(val) => updateDisplay({ color: { ...display.color, keys: val } })}
+            />
+          </div>
+
+          <div>
+            <ColorPicker
+              label="Title Color"
+              value={display.color?.title}
+              onChange={(val) => updateDisplay({ color: { ...display.color, title: val } })}
+            />
+          </div>
+
+          <div>
+            <ColorPicker
+              label="Output Color"
+              value={display.color?.output}
+              onChange={(val) => updateDisplay({ color: { ...display.color, output: val } })}
+            />
+          </div>
+
+          <div>
+            <ColorPicker
+              label="Separator Color"
+              value={display.color?.separator}
+              onChange={(val) => updateDisplay({ color: { ...display.color, separator: val } })}
+            />
           </div>
 
           <div>

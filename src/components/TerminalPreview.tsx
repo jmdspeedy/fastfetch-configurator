@@ -74,7 +74,7 @@ export default function TerminalPreview() {
 
     // Split by $1-$9 markers
     const parts = line.split(/(\$[1-9])/g);
-    
+
     return (
       <div key={lineIndex} className="whitespace-pre">
         {parts.map((part, i) => {
@@ -95,16 +95,26 @@ export default function TerminalPreview() {
 
   const separator = display.separator || ': ';
   const keyColor = display.color?.keys || 'blue';
-  
+  const titleColor = display.color?.title || 'blue';
+  const outputColor = display.color?.output || 'default';
+  const separatorColor = display.color?.separator || 'default';
+
+  // Tailwind map for simple color names
   // Tailwind map for simple color names
   const getColorClass = (colorName?: string) => {
-    if (!colorName) return 'text-blue-400';
+    if (!colorName) return 'text-gray-200'; // Default text color
+
+    // Normalize (handle bold_, bright_, etc. by stripping locally for preview simplicity)
+    // In a real terminal emulator we'd handle brightness, but for a simple preview:
+    const normalized = colorName.replace(/^(bold_|bright_|italic_|underline_|blink_)+/, '');
+
     const map: Record<string, string> = {
-      black: 'text-gray-900', red: 'text-red-500', green: 'text-green-500', 
-      yellow: 'text-yellow-500', blue: 'text-blue-500', magenta: 'text-pink-500', 
-      cyan: 'text-cyan-500', white: 'text-gray-100', default: 'text-gray-200'
+      black: 'text-gray-900', red: 'text-red-500', green: 'text-green-500',
+      yellow: 'text-yellow-500', blue: 'text-blue-500', magenta: 'text-pink-500',
+      cyan: 'text-cyan-500', white: 'text-gray-100', default: 'text-gray-300'
     };
-    return map[colorName] || 'text-blue-400';
+
+    return map[normalized] || map[colorName] || 'text-gray-300';
   };
 
   return (
@@ -118,34 +128,34 @@ export default function TerminalPreview() {
         </div>
         <div className="flex-1 text-center text-gray-400 text-xs">user@fastfetch-config: ~</div>
       </div>
-      
+
       {/* Terminal Content */}
       <div className="p-6 text-gray-300 overflow-auto">
         <div className="flex gap-6">
           {/* Logo */}
           <div className="font-bold whitespace-pre leading-tight select-none">
             {logo._customContent ? (
-               <Ansi>{logo._customContent}</Ansi>
+              <Ansi>{logo._customContent}</Ansi>
             ) : (
-               logoData?.ascii.split('\n').map((line, i) => renderLogoLine(line, i))
+              logoData?.ascii.split('\n').map((line, i) => renderLogoLine(line, i))
             )}
           </div>
-          
+
           {/* Info Modules */}
           <div className="flex flex-col gap-0.5">
             {modules.map((m) => {
               const data = getModuleContent(m, separator);
-              
+
               if (data.type === 'title') {
                 return (
                   <div key={m.id} className="mb-1">
-                    <span className={clsx("font-bold", getColorClass(keyColor))}>user</span>
-                    <span className="text-gray-400">@</span>
-                    <span className={clsx("font-bold", getColorClass(keyColor))}>hostname</span>
+                    <span className={clsx("font-bold", getColorClass(titleColor))}>user</span>
+                    <span className={clsx("font-bold", getColorClass(separatorColor))}>@</span>
+                    <span className={clsx("font-bold", getColorClass(titleColor))}>hostname</span>
                   </div>
                 );
               }
-              
+
               if (data.type === 'separator') {
                 return <div key={m.id} className="text-gray-500 mb-1">{data.value}</div>;
               }
@@ -174,8 +184,8 @@ export default function TerminalPreview() {
                   <span className={clsx("font-bold", getColorClass(m.keyColor || keyColor))}>
                     {data.key}
                   </span>
-                  <span className="text-gray-500">{data.separator}</span>
-                  <span className={clsx(getColorClass(m.outputColor))}>
+                  <span className={clsx(getColorClass(separatorColor))}>{data.separator}</span>
+                  <span className={clsx(getColorClass(m.outputColor || outputColor))}>
                     {data.value}
                   </span>
                 </div>
