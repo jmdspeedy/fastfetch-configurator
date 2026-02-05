@@ -1,11 +1,21 @@
+'use client';
+
+import { useState } from 'react'; // Added useState
 import ModuleList from '@/components/ModuleList';
 import JsonPreview from '@/components/JsonPreview';
 import TerminalPreview from '@/components/TerminalPreview';
 import AppearanceControls from '@/components/AppearanceControls';
 import HeaderControls from '@/components/HeaderControls';
+import WelcomeScreen from '@/components/WelcomeScreen'; // Added Import
 import { Settings } from 'lucide-react';
 
 export default function Home() {
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
+  }
+
   return (
     <main className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
       {/* Header */}

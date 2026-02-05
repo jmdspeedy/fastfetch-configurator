@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
-export type ModuleType = 
-  | 'Title' | 'Separator' | 'OS' | 'Host' | 'Kernel' | 'Uptime' | 'Packages' | 'Shell' 
-  | 'Display' | 'DE' | 'WM' | 'WMTheme' | 'Theme' | 'Icons' | 'Font' | 'Cursor' 
-  | 'Terminal' | 'TerminalFont' | 'CPU' | 'GPU' | 'Memory' | 'Swap' | 'Disk' 
-  | 'Battery' | 'PowerAdapter' | 'Player' | 'Media' | 'LocalIP' | 'PublicIP' 
-  | 'Wifi' | 'DateTime' | 'Locale' | 'Vulkan' | 'OpenGL' | 'OpenCL' | 'Users' 
-  | 'Bluetooth' | 'Sound' | 'Gamepad' | 'Weather' | 'NetIO' | 'DiskIO' 
+export type ModuleType =
+  | 'Title' | 'Separator' | 'OS' | 'Host' | 'Kernel' | 'Uptime' | 'Packages' | 'Shell'
+  | 'Display' | 'DE' | 'WM' | 'WMTheme' | 'Theme' | 'Icons' | 'Font' | 'Cursor'
+  | 'Terminal' | 'TerminalFont' | 'CPU' | 'GPU' | 'Memory' | 'Swap' | 'Disk'
+  | 'Battery' | 'PowerAdapter' | 'Player' | 'Media' | 'LocalIP' | 'PublicIP'
+  | 'Wifi' | 'DateTime' | 'Locale' | 'Vulkan' | 'OpenGL' | 'OpenCL' | 'Users'
+  | 'Bluetooth' | 'Sound' | 'Gamepad' | 'Weather' | 'NetIO' | 'DiskIO'
   | 'PhysicalDisk' | 'Version' | 'Break' | 'Colors' | 'Command'
   | 'BIOS' | 'BluetoothRadio' | 'Board' | 'Bootmgr' | 'Brightness' | 'Btrfs'
   | 'Camera' | 'Chassis' | 'CPUCache' | 'CPUUsage' | 'Custom' | 'DNS'
@@ -40,8 +40,8 @@ export interface LogoConfig {
     [key: string]: string;
   };
   // Store internal state for preview
-  _presetName?: string; 
-  _customContent?: string; 
+  _presetName?: string;
+  _customContent?: string;
   [key: string]: any;
 }
 
@@ -61,7 +61,7 @@ interface ConfigState {
   modules: ModuleConfig[];
   logo: LogoConfig;
   display: DisplayConfig;
-  
+
   // Actions
   addModule: (type: string) => void;
   removeModule: (id: string) => void;
@@ -141,8 +141,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
   })),
 
   setPresetLogo: (name) => set((state) => ({
-    logo: { 
-      ...state.logo, 
+    logo: {
+      ...state.logo,
       type: 'auto', // Reset to auto/builtin for presets
       source: undefined,
       _presetName: name,
@@ -151,8 +151,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
   })),
 
   setCustomLogo: (content) => set((state) => ({
-    logo: { 
-      ...state.logo, 
+    logo: {
+      ...state.logo,
       type: 'file', // Typically custom logos are loaded from file
       source: 'logo.txt', // Default reference for downloaded files
       _presetName: undefined,
@@ -172,17 +172,91 @@ export const useConfigStore = create<ConfigState>((set) => ({
 
   loadConfig: (json) => {
     try {
-      const parsed = JSON.parse(json);
+      // Strip JSONC comments (// and /* */) before parsing
+      const stripJsonComments = (str: string): string => {
+        let result = '';
+        let inString = false;
+        let inSingleLineComment = false;
+        let inMultiLineComment = false;
+        let escapeNext = false;
+
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          const nextChar = str[i + 1];
+
+          if (escapeNext) {
+            result += char;
+            escapeNext = false;
+            continue;
+          }
+
+          if (char === '\\' && inString) {
+            result += char;
+            escapeNext = true;
+            continue;
+          }
+
+          if (char === '"' && !inSingleLineComment && !inMultiLineComment) {
+            inString = !inString;
+            result += char;
+            continue;
+          }
+
+          if (inString) {
+            result += char;
+            continue;
+          }
+
+          if (inSingleLineComment) {
+            if (char === '\n') {
+              inSingleLineComment = false;
+              result += char;
+            }
+            continue;
+          }
+
+          if (inMultiLineComment) {
+            if (char === '*' && nextChar === '/') {
+              inMultiLineComment = false;
+              i++; // Skip the '/'
+            }
+            continue;
+          }
+
+          if (char === '/' && nextChar === '/') {
+            inSingleLineComment = true;
+            i++; // Skip the second '/'
+            continue;
+          }
+
+          if (char === '/' && nextChar === '*') {
+            inMultiLineComment = true;
+            i++; // Skip the '*'
+            continue;
+          }
+
+          result += char;
+        }
+
+        return result;
+      };
+
+      const cleanedJson = stripJsonComments(json);
+      const parsed = JSON.parse(cleanedJson);
       // Basic validation/migration logic would be needed here
       // For now, just a direct set if structure matches
       set({
         logo: parsed.logo || { type: 'auto', _presetName: 'arch' },
         display: parsed.display || {},
-        modules: parsed.modules?.map((m: any) => ({
-          ...m, 
-          id: uuidv4(), 
-          type: typeof m === 'string' ? m : m.type 
-        })) || defaultModules
+        modules: parsed.modules?.map((m: any) => {
+          if (typeof m === 'string') {
+            // Simple string module like "Title"
+            return { id: uuidv4(), type: m };
+          } else {
+            // Object module with additional properties
+            return { ...m, id: uuidv4(), type: m.type };
+          }
+        }) || defaultModules
       });
     } catch (e) {
       console.error("Failed to load config", e);
