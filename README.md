@@ -15,7 +15,7 @@ An interactive, visual editor for building and deploying [Fastfetch](https://git
 
 ## 🚀 Quick Start
 
-1.  **Visit the App**: Go to [fastfetch-configurator.vercel.app](https://fastfetch-configurator.vercel.app).
+1.  **Visit the App**: Go to [fastfetch-configurator.vercel.app](fastfetch.jameswu.me).
 2.  **Customize**:
     -   Add or remove modules from the **Modules** panel.
     -   Drag modules to change their display order.
