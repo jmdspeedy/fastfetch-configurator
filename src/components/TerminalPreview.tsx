@@ -45,6 +45,46 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
     case 'Publicip': value = '203.0.113.1'; break;
     case 'Wifi': value = 'MyWifi (70%)'; break;
     case 'Datetime': value = '2024-05-20 14:30:00'; break;
+    // Additional modules with placeholders
+    case 'Locale': value = 'en_US.UTF-8'; break;
+    case 'Vulkan': value = 'Mesa 24.0.1 (Driver: RADV)'; break;
+    case 'Opengl': value = 'OpenGL 4.6 (Mesa 24.0.1)'; break;
+    case 'Opencl': value = 'OpenCL 3.0'; break;
+    case 'Users': value = '2 (user, guest)'; break;
+    case 'Bluetooth': value = 'Intel Wireless (Connected)'; break;
+    case 'Sound': value = 'PulseAudio (pipewire-pulse)'; break;
+    case 'Gamepad': value = 'Xbox Wireless Controller'; break;
+    case 'Weather': value = 'Tokyo: 🌤 22°C'; break;
+    case 'Netio': value = '↓ 1.2 MiB/s ↑ 0.3 MiB/s'; break;
+    case 'Diskio': value = '↓ 50 MiB/s ↑ 25 MiB/s'; break;
+    case 'Physicaldisk': value = 'Samsung SSD 980 (500GB)'; break;
+    case 'Version': value = 'fastfetch 2.8.0 (x86_64)'; break;
+    case 'Bios': value = 'American Megatrends v2.2'; break;
+    case 'Bluetoothradio': value = 'Intel AX200 (Enabled)'; break;
+    case 'Board': value = 'ASUS ROG B550-F Gaming'; break;
+    case 'Bootmgr': value = 'systemd-boot'; break;
+    case 'Brightness': value = '75%'; break;
+    case 'Btrfs': value = '/dev/sda1: 450 GiB / 500 GiB'; break;
+    case 'Camera': value = 'Integrated Webcam (1080p)'; break;
+    case 'Chassis': value = 'Desktop'; break;
+    case 'Cpucache': value = 'L1: 512 KiB / L2: 4 MiB / L3: 32 MiB'; break;
+    case 'Cpuusage': value = '15%'; break;
+    case 'Dns': value = '8.8.8.8, 1.1.1.1'; break;
+    case 'Editor': value = 'nvim'; break;
+    case 'Initsystem': value = 'systemd 255'; break;
+    case 'Keyboard': value = 'US QWERTY'; break;
+    case 'Lm': value = 'SDDM'; break;
+    case 'Loadavg': value = '0.52, 0.48, 0.43'; break;
+    case 'Logo': return { type: 'break', value: '' }; // Logo is handled separately
+    case 'Monitor': value = 'LG 27GL850 (2560x1440 @ 144Hz)'; break;
+    case 'Mouse': value = 'Logitech G502 HERO'; break;
+    case 'Physicalmemory': value = '2x 8 GiB DDR4 3200MHz'; break;
+    case 'Processes': value = '245'; break;
+    case 'Terminalsize': value = '120x40'; break;
+    case 'Terminaltheme': value = 'Dracula'; break;
+    case 'Tpm': value = 'TPM 2.0 (Enabled)'; break;
+    case 'Wallpaper': value = '/usr/share/backgrounds/arch.png'; break;
+    case 'Zpool': value = 'rpool: 1.2 TiB / 2.0 TiB'; break;
     case 'Colors': return { type: 'colors', value: '' };
     case 'Break': return { type: 'break', value: '' };
     case 'Command':
@@ -59,7 +99,7 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
     case 'Text':
       // Custom modules display just the value, no key/separator
       return { type: 'custom', value: module.text || module.format || 'Custom Text' };
-    default: value = '...';
+    default: value = module.type;
   }
 
   return { type: 'info', key, value, separator: displaySeparator };
