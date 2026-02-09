@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react'; // Added useState
+import { useState } from 'react';
+import Image from 'next/image';
 import ModuleList from '@/components/ModuleList';
 import JsonPreview from '@/components/JsonPreview';
 import TerminalPreview from '@/components/TerminalPreview';
 import AppearanceControls from '@/components/AppearanceControls';
 import HeaderControls from '@/components/HeaderControls';
-import WelcomeScreen from '@/components/WelcomeScreen'; // Added Import
-import { Settings } from 'lucide-react';
+import WelcomeScreen from '@/components/WelcomeScreen';
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -21,7 +21,7 @@ export default function Home() {
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-800 pb-6">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
+          <Image src="/logo.svg" alt="Logo" width={40} height={40} className="w-10 h-10" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Fastfetch Configurator</h1>
             <p className="text-gray-500 text-sm">Visual editor for fastfetch configuration files</p>
@@ -76,7 +76,7 @@ export default function Home() {
           </div>
           <div>
             <h3 className="text-blue-400 font-semibold mb-2">How do I install the generated config?</h3>
-            <p>Simply click "Deploy Config" and run the generated one-line command in your terminal. It handles the <code>mkdir</code> and file placement for <code>~/.config/fastfetch/config.jsonc</code> automatically.</p>
+            <p>Simply click &quot;Deploy Config&quot; and run the generated one-line command in your terminal. It handles the <code>mkdir</code> and file placement for <code>~/.config/fastfetch/config.jsonc</code> automatically.</p>
           </div>
           <div>
             <h3 className="text-blue-400 font-semibold mb-2">Fastfetch vs Neofetch?</h3>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { X, Check } from 'lucide-react';
 import ColorPicker from './ColorPicker';
