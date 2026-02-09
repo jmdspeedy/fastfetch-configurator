@@ -58,9 +58,8 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
     case 'custom':
     case 'Text':
     case 'text':
-      // Show custom text
-      value = module.text || module.format || 'Custom Text';
-      break;
+      // Custom modules display just the value, no key/separator
+      return { type: 'custom', value: module.text || module.format || 'Custom Text' };
     default: value = '...';
   }
 
@@ -192,6 +191,15 @@ export default function TerminalPreview() {
                     <div className="w-4 h-4 bg-pink-500 rounded-sm"></div>
                     <div className="w-4 h-4 bg-cyan-500 rounded-sm"></div>
                     <div className="w-4 h-4 bg-white rounded-sm"></div>
+                  </div>
+                );
+              }
+
+              // Custom modules - display just the value without key/separator
+              if (data.type === 'custom') {
+                return (
+                  <div key={m.id} className={clsx("whitespace-nowrap", getColorClass(m.outputColor || outputColor))}>
+                    {data.value}
                   </div>
                 );
               }
