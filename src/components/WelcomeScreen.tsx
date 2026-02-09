@@ -1,20 +1,83 @@
 import React, { useState, useRef } from 'react';
-import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check } from 'lucide-react';
+import Image from 'next/image';
+import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check, Loader2, RefreshCw, ChevronLeft } from 'lucide-react'; // Added Loader2, RefreshCw, ChevronLeft
 import { useConfigStore } from '@/store/config';
 
 interface WelcomeScreenProps {
     onComplete: () => void;
 }
 
+interface Template {
+    name: string;
+    download_url: string;
+}
+
+interface GitHubContentItem {
+    name: string;
+    download_url: string;
+    type: string;
+}
+
 export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     const [importMode, setImportMode] = useState(false);
-    const [configContent, setConfigContent] = useState('');
+    const [templateMode, setTemplateMode] = useState(false); // New state for template mode
+    const [templates, setTemplates] = useState<Template[]>([]); // Store fetched templates
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false); // Loading state
     const [error, setError] = useState<string | null>(null);
+    const [configContent, setConfigContent] = useState('');
     const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { loadConfig, resetConfig } = useConfigStore();
 
-    const handleStartTemplate = () => {
+    // Fetch templates from GitHub
+    const fetchTemplates = async () => {
+        setIsLoadingTemplates(true);
+        setError(null);
+        try {
+            const response = await fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=dev');
+            if (!response.ok) throw new Error('Failed to fetch templates');
+            const data: GitHubContentItem[] = await response.json();
+            // Filter ensuring we only get .jsonc or .json files and map to our interface
+            const validTemplates = data
+                .filter((item) => item.name.endsWith('.jsonc') || item.name.endsWith('.json'))
+                .map((item) => ({
+                    name: item.name,
+                    download_url: item.download_url
+                }));
+            setTemplates(validTemplates);
+        } catch (err) {
+            setError("Failed to load templates. Please try again.");
+            console.error(err);
+        } finally {
+            setIsLoadingTemplates(false);
+        }
+    };
+
+    // Handle template mode activation
+    const handleEnterTemplateMode = () => {
+        setTemplateMode(true);
+        fetchTemplates();
+    };
+
+    // Handle template selection
+    const handleSelectTemplate = async (template: Template) => {
+        setIsLoadingTemplates(true);
+        setError(null);
+        try {
+            const response = await fetch(template.download_url);
+            if (!response.ok) throw new Error('Failed to fetch template content');
+            const text = await response.text();
+            loadConfig(text);
+            onComplete();
+        } catch (err) {
+            setError(`Failed to load template ${template.name}.`);
+            console.error(err);
+        } finally {
+            setIsLoadingTemplates(false);
+        }
+    };
+
+    const handleStartEmpty = () => {
         resetConfig();
         onComplete();
     };
@@ -27,7 +90,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
             }
             loadConfig(configContent);
             onComplete();
-        } catch (e) {
+        } catch {
             setError("Invalid JSON format. Please check your config.");
         }
     };
@@ -59,8 +122,15 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                 <div className="absolute top-0 left-0 w-full h-full bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
 
                 <div className="relative text-center mb-12">
-                    <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20">
-                        <img src="/logo.svg" alt="Fastfetch Configurator" className="w-16 h-16" />
+                    <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20 bg-black/20 backdrop-blur-sm">
+                        <Image 
+                            src="/logo.svg" 
+                            alt="Fastfetch Configurator" 
+                            width={64} 
+                            height={64} 
+                            className="w-16 h-16" 
+                            priority
+                        />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
                         Fastfetch Configurator
@@ -70,11 +140,11 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                     </p>
                 </div>
 
-                {!importMode ? (
+                {!importMode && !templateMode ? (
                     <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto relative">
                         {/* Option 1: Template */}
                         <button
-                            onClick={handleStartTemplate}
+                            onClick={handleEnterTemplateMode}
                             className="group relative flex flex-col items-start p-8 rounded-2xl bg-[#161616] border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all duration-300 text-left hover:shadow-2xl hover:shadow-blue-500/10"
                         >
                             <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -82,10 +152,10 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                             </div>
                             <h3 className="text-xl font-semibold text-white mb-2">Start from Template</h3>
                             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                                Begin with a clean, standard configuration featuring popular modules. Perfect for new users or fresh starts.
+                                Choose from official fastfetch presets or start with a clean configuration.
                             </p>
                             <div className="mt-auto flex items-center text-blue-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0">
-                                Create new config <ArrowRight className="w-4 h-4 ml-2" />
+                                Browse templates <ArrowRight className="w-4 h-4 ml-2" />
                             </div>
                         </button>
 
@@ -129,7 +199,76 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                             </div>
                         </div>
                     </div>
+                ) : templateMode ? (
+                    // Template Selection Mode
+                    <div className="max-w-4xl mx-auto bg-[#161616] border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[500px]">
+                         <div className="flex items-center justify-between mb-6 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={() => setTemplateMode(false)}
+                                    className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <h3 className="text-xl font-semibold text-white">Select a Template</h3>
+                            </div>
+                            <button 
+                                onClick={fetchTemplates}
+                                className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+                                title="Refresh templates"
+                            >
+                                <RefreshCw size={18} className={isLoadingTemplates ? "animate-spin" : ""} />
+                            </button>
+                        </div>
+
+                        {error && (
+                            <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm shrink-0">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto min-h-0 pr-2 space-y-2 custom-scrollbar">
+                             {/* Empty Start Option */}
+                             <button
+                                onClick={handleStartEmpty}
+                                className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all text-left group"
+                            >
+                                <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
+                                    <FileCode size={20} />
+                                </div>
+                                <div>
+                                    <div className="font-medium text-white">Empty / Default</div>
+                                    <div className="text-sm text-gray-500">Start with a basic blank configuration</div>
+                                </div>
+                            </button>
+
+                            {isLoadingTemplates && templates.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                                    <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                                    <p>Loading templates from GitHub...</p>
+                                </div>
+                            ) : (
+                                templates.map((template) => (
+                                    <button
+                                        key={template.name}
+                                        onClick={() => handleSelectTemplate(template)}
+                                        disabled={isLoadingTemplates}
+                                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
+                                           <span className="font-mono text-xs font-bold">{template.name.slice(0, 2)}</span>
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-white">{template.name}</div>
+                                            <div className="text-sm text-gray-500">Official preset from fastfetch-cli repo</div>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    </div>
                 ) : (
+                    // Import Mode
                     <div className="max-w-2xl mx-auto bg-[#161616] border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
                         <div className="mb-6">
                             <h3 className="text-xl font-semibold text-white">Import Configuration</h3>
