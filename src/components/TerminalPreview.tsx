@@ -10,54 +10,53 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
   const key = module.key || module.type;
   let value = '';
 
-  switch (module.type) {
+  // Normalize type to Title Case for case-insensitive matching
+  const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();
+  
+  switch (normalizedType) {
     case 'Title': return { type: 'title', value: 'user@hostname' };
     case 'Separator': return { type: 'separator', value: '-------------------' };
-    case 'OS': value = 'Arch Linux x86_64'; break;
+    case 'Os': value = 'Arch Linux x86_64'; break;
     case 'Host': value = 'KVM/QEMU (Standard PC)'; break;
     case 'Kernel': value = '6.6.13-linux'; break;
     case 'Uptime': value = '42 mins'; break;
     case 'Packages': value = '1203 (pacman)'; break;
     case 'Shell': value = 'bash 5.2.21'; break;
     case 'Display': value = '1920x1080 @ 60Hz'; break;
-    case 'DE': value = 'GNOME 45.3'; break;
-    case 'WM': value = 'Mutter'; break;
-    case 'WMTheme': value = 'Adwaita'; break;
+    case 'De': value = 'GNOME 45.3'; break;
+    case 'Wm': value = 'Mutter'; break;
+    case 'Wmtheme': value = 'Adwaita'; break;
     case 'Theme': value = 'Adwaita [GTK2/3]'; break;
     case 'Icons': value = 'Adwaita [GTK2/3]'; break;
     case 'Font': value = 'Cantarell (11pt)'; break;
     case 'Cursor': value = 'Adwaita'; break;
     case 'Terminal': value = 'gnome-terminal'; break;
-    case 'TerminalFont': value = 'Monospace (12pt)'; break;
-    case 'CPU': value = 'AMD Ryzen 9 5950X (4) @ 3.4GHz'; break;
-    case 'GPU': value = 'Red Hat QXL Paravirtual Graphic Card'; break;
+    case 'Terminalfont': value = 'Monospace (12pt)'; break;
+    case 'Cpu': value = 'AMD Ryzen 9 5950X (4) @ 3.4GHz'; break;
+    case 'Gpu': value = 'Red Hat QXL Paravirtual Graphic Card'; break;
     case 'Memory': value = '1.21 GiB / 16.00 GiB'; break;
     case 'Swap': value = '0 B / 4.00 GiB'; break;
     case 'Disk': value = '15.4 GiB / 50.0 GiB (31%)'; break;
     case 'Battery': value = '100% [Charging]'; break;
-    case 'PowerAdapter': value = '65W'; break;
+    case 'Poweradapter': value = '65W'; break;
     case 'Player': value = 'Spotify'; break;
     case 'Media': value = 'Never Gonna Give You Up - Rick Astley'; break;
-    case 'LocalIP': value = '192.168.1.45'; break;
-    case 'PublicIP': value = '203.0.113.1'; break;
+    case 'Localip': value = '192.168.1.45'; break;
+    case 'Publicip': value = '203.0.113.1'; break;
     case 'Wifi': value = 'MyWifi (70%)'; break;
-    case 'DateTime': value = '2024-05-20 14:30:00'; break;
+    case 'Datetime': value = '2024-05-20 14:30:00'; break;
     case 'Colors': return { type: 'colors', value: '' };
     case 'Break': return { type: 'break', value: '' };
     case 'Command':
-    case 'command':
       // Show the command output placeholder
       value = module.text ? `$(output of "${module.text}")` : '$(command output)';
       break;
     case 'File':
-    case 'file':
       // Show file path placeholder
       value = module.source ? `[File: ${module.source}]` : '[File Content]';
       break;
     case 'Custom':
-    case 'custom':
     case 'Text':
-    case 'text':
       // Custom modules display just the value, no key/separator
       return { type: 'custom', value: module.text || module.format || 'Custom Text' };
     default: value = '...';
