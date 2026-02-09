@@ -15,7 +15,7 @@ An interactive, visual editor for building and deploying [Fastfetch](https://git
 
 ## 🚀 Quick Start
 
-1.  **Visit the App**: Go to [fastfetch.jameswu.me](fastfetch.jameswu.me).
+1.  **Visit the App**: Go to [fastfetch.jameswu.me](https://fastfetch.jameswu.me).
 2.  **Customize**:
     -   Add or remove modules from the **Modules** panel.
     -   Drag modules to change their display order.
