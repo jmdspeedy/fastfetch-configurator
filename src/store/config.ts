@@ -22,6 +22,8 @@ export interface ModuleConfig {
   format?: string;
   keyColor?: string;
   outputColor?: string;
+  text?: string; // For Command and Custom/Text modules
+  source?: string; // For File module
   [key: string]: any; // Allow other schema props
 }
 
@@ -248,7 +250,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
       set({
         logo: parsed.logo || { type: 'auto', _presetName: 'arch' },
         display: parsed.display || {},
-        modules: parsed.modules?.map((m: any) => {
+        modules: parsed.modules?.map((m: string | ModuleConfig) => {
           if (typeof m === 'string') {
             // Simple string module like "Title"
             return { id: uuidv4(), type: m };

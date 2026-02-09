@@ -44,6 +44,23 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
     case 'DateTime': value = '2024-05-20 14:30:00'; break;
     case 'Colors': return { type: 'colors', value: '' };
     case 'Break': return { type: 'break', value: '' };
+    case 'Command':
+    case 'command':
+      // Show the command output placeholder
+      value = module.text ? `$(output of "${module.text}")` : '$(command output)';
+      break;
+    case 'File':
+    case 'file':
+      // Show file path placeholder
+      value = module.source ? `[File: ${module.source}]` : '[File Content]';
+      break;
+    case 'Custom':
+    case 'custom':
+    case 'Text':
+    case 'text':
+      // Show custom text
+      value = module.text || module.format || 'Custom Text';
+      break;
     default: value = '...';
   }
 
