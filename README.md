@@ -2,7 +2,7 @@
 
 An interactive, visual editor for building and deploying [Fastfetch](https://github.com/fastfetch-cli/fastfetch) configuration files. Stop manually editing JSONC files—drag, drop, and preview your system fetch in real-time.
 
-![Fastfetch Configurator Logo](fastfetch.jameswu.me)
+![Fastfetch Configurator Logo](https://fastfetch-configurator.vercel.app/logo.svg)
 
 ## ✨ Features
 
