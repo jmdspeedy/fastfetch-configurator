@@ -24,7 +24,7 @@ export interface ModuleConfig {
   outputColor?: string;
   text?: string; // For Command and Custom/Text modules
   source?: string; // For File module
-  [key: string]: any; // Allow other schema props
+  [key: string]: unknown; // Allow other schema props
 }
 
 export interface LogoConfig {
@@ -44,7 +44,7 @@ export interface LogoConfig {
   // Store internal state for preview
   _presetName?: string;
   _customContent?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface DisplayConfig {
@@ -56,7 +56,7 @@ export interface DisplayConfig {
   };
   separator?: string;
   keyWidth?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ConfigState {
@@ -244,7 +244,9 @@ export const useConfigStore = create<ConfigState>((set) => ({
       };
 
       const cleanedJson = stripJsonComments(json);
-      const parsed = JSON.parse(cleanedJson);
+      // Remove trailing commas (allowed in JSONC but not standard JSON)
+      const noTrailingCommas = cleanedJson.replace(/,(\s*[}\]])/g, '$1');
+      const parsed = JSON.parse(noTrailingCommas);
       // Basic validation/migration logic would be needed here
       // For now, just a direct set if structure matches
       set({
