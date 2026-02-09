@@ -162,7 +162,11 @@ export default function HeaderControls() {
   }, [showModal, step]);
 
   const handleQuickInstall = async () => {
-    if (!altchaPayload) return;
+    if (!altchaPayload) {
+      alert('Captcha token not available. Please try again.');
+      setStep('captcha');
+      return;
+    }
     setLoading(true);
     try {
       const configStr = generateConfigString();
@@ -184,12 +188,34 @@ export default function HeaderControls() {
         setInstallCommand(`curl -sSL "${baseUrl}/api/config?id=${id}&type=install" | bash`);
         setStep('result');
       } else {
-        alert('Captcha verification failed. Please try again.');
+        // Parse error response for better feedback
+        let errorMessage = 'Failed to generate install command.';
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // Response might not be JSON
+        }
+        
+        if (response.status === 400 && errorMessage.includes('captcha')) {
+          alert('Captcha verification failed or expired. Please complete the captcha again.');
+        } else if (response.status === 503) {
+          alert('Server is busy. Please try again in a moment.');
+        } else {
+          alert(`Error: ${errorMessage}`);
+        }
+        
+        // Reset to captcha step to get a fresh token
         setStep('captcha');
         setAltchaPayload(null);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Install command generation error:', error);
+      alert('Network error. Please check your connection and try again.');
+      setStep('captcha');
+      setAltchaPayload(null);
     }
     setLoading(false);
   };
