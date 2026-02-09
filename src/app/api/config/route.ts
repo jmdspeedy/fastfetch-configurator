@@ -34,19 +34,37 @@ export async function GET(req: NextRequest) {
   const id = searchParams.get('id');
   const type = searchParams.get('type'); // 'config', 'logo', 'install'
 
+  /**
+   * Helper function to return bash-safe error responses.
+   * When the response is piped to bash (e.g., curl ... | bash), plain text errors
+   * like "Not found" cause bash to try executing them as commands, resulting in
+   * "bash: line 1: Not: command not found". This function returns a proper shell
+   * script that echoes the error and exits gracefully.
+   */
+  const bashSafeError = (message: string, status: number) => {
+    const script = `#!/bin/bash\necho "Error: ${message}" >&2\nexit 1\n`;
+    return new NextResponse(script, {
+      status,
+      headers: {
+        'Content-Type': 'text/x-shellscript',
+        'Cache-Control': 'no-store, max-age=0'
+      }
+    });
+  };
+
   if (!id || typeof id !== 'string' || id.length > 36) {
-    return new NextResponse('Invalid ID', { status: 400 });
+    return bashSafeError('Invalid ID', 400);
   }
 
   const data = tempStorage.get(id);
   
   if (!data) {
-    return new NextResponse('Not found or expired', { status: 404 });
+    return bashSafeError('Configuration not found or expired. Please generate a new install command.', 404);
   }
 
   if (Date.now() > data.expires) {
     tempStorage.delete(id);
-    return new NextResponse('Expired', { status: 404 });
+    return bashSafeError('Configuration expired. Please generate a new install command.', 404);
   }
 
   if (type === 'config') {
@@ -59,7 +77,9 @@ export async function GET(req: NextRequest) {
   }
 
   if (type === 'logo') {
-    if (!data.logo) return new NextResponse('No logo for this config', { status: 404 });
+    if (!data.logo) {
+      return bashSafeError('No logo for this config', 404);
+    }
     return new NextResponse(data.logo, {
       headers: { 
         'Content-Type': 'text/plain',
@@ -91,7 +111,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return new NextResponse('Invalid request', { status: 400 });
+  return bashSafeError('Invalid request type', 400);
 }
 
 export async function POST(req: NextRequest) {
