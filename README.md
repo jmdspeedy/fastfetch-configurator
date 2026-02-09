@@ -2,7 +2,7 @@
 
 An interactive, visual editor for building and deploying [Fastfetch](https://github.com/fastfetch-cli/fastfetch) configuration files. Stop manually editing JSONC files—drag, drop, and preview your system fetch in real-time.
 
-![Fastfetch Configurator Logo](https://fastfetch-configurator.vercel.app/logo.svg)
+![Fastfetch Configurator Logo](fastfetch.jameswu.me)
 
 ## ✨ Features
 
@@ -15,7 +15,7 @@ An interactive, visual editor for building and deploying [Fastfetch](https://git
 
 ## 🚀 Quick Start
 
-1.  **Visit the App**: Go to [fastfetch-configurator.vercel.app](fastfetch.jameswu.me).
+1.  **Visit the App**: Go to [fastfetch.jameswu.me](fastfetch.jameswu.me).
 2.  **Customize**:
     -   Add or remove modules from the **Modules** panel.
     -   Drag modules to change their display order.
@@ -26,23 +26,6 @@ An interactive, visual editor for building and deploying [Fastfetch](https://git
     -   Pass the security check.
     -   Choose **One-Line Install** to get a `curl` command.
     -   Run the command in your terminal to apply the settings.
-
-## 🛠️ Local Development
-
-To run the configurator locally:
-
-```bash
-# Clone the repository
-git clone https://github.com/jmdspeedy/fastfetch-configurator.git
-
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## 📄 License
 
