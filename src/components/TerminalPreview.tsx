@@ -2,13 +2,40 @@
 
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { getLogoData } from '@/utils/logos';
+import { getDummyValues } from '@/data/moduleFormatStrings';
 import clsx from 'clsx';
 import Ansi from 'ansi-to-react';
+
+/**
+ * Resolve a format string by replacing {placeholder} tokens with dummy sample values.
+ * Falls back to the raw placeholder text if no dummy value is found.
+ */
+const resolveFormatString = (format: string, moduleType: string): string => {
+  const dummies = getDummyValues(moduleType);
+  return format.replace(/\{([^}]+)\}/g, (_match, key: string) => {
+    return dummies[key] ?? `{${key}}`;
+  });
+};
 
 // Mapping module types to dummy data
 const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ') => {
   const key = module.key || module.type;
   let value = '';
+
+  // If a custom format string is set, resolve it and use as the display value
+  if (module.format) {
+    const resolved = resolveFormatString(module.format, module.type);
+    // Special types still need their own rendering path
+    const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();
+    if (normalizedType === 'Title') return { type: 'title', value: resolved };
+    if (normalizedType === 'Separator') return { type: 'separator', value: resolved };
+    if (normalizedType === 'Colors') return { type: 'colors', value: '' };
+    if (normalizedType === 'Break') return { type: 'break', value: '' };
+    if (normalizedType === 'Custom' || normalizedType === 'Text') {
+      return { type: 'custom', value: resolved };
+    }
+    return { type: 'info', key, value: resolved, separator: displaySeparator };
+  }
 
   // Normalize type to Title Case for case-insensitive matching
   const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();

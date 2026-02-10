@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { X, Check } from 'lucide-react';
 import ColorPicker from './ColorPicker';
+import FormatStringInput from './FormatStringInput';
 
 interface ModuleEditorProps {
     moduleId: string;
@@ -108,12 +109,10 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                      {/* Common Field: Format */}
                      <div>
                         <label className="text-xs text-gray-400 mb-1 block">Format String</label>
-                        <input
-                            type="text"
+                        <FormatStringInput
                             value={localConfig.format || ''}
-                            onChange={(e) => handleChange('format', e.target.value)}
-                            placeholder="{1} {2}"
-                            className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm font-mono rounded-md p-2 focus:outline-none focus:border-blue-500 placeholder-gray-600"
+                            onChange={(val) => handleChange('format', val)}
+                            moduleType={moduleData.type}
                         />
                     </div>
 
