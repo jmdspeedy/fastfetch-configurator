@@ -22,7 +22,7 @@ export interface ModuleConfig {
   format?: string;
   keyColor?: string;
   outputColor?: string;
-  text?: string; // For Command and Custom/Text modules
+  text?: string; // For Command module (shell command to execute)
   source?: string; // For File module
   [key: string]: unknown; // Allow other schema props
 }

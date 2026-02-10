@@ -49,17 +49,19 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
 
                 {/* Body */}
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                    {/* Common Field: Key (Label) */}
-                    <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Label (Key)</label>
-                        <input
-                            type="text"
-                            value={localConfig.key || ''}
-                            onChange={(e) => handleChange('key', e.target.value)}
-                            placeholder={moduleData.type}
-                            className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-md p-2 focus:outline-none focus:border-blue-500 placeholder-gray-600"
-                        />
-                    </div>
+                    {/* Common Field: Key (Label) — hidden for Custom/Text since key is used as display text */}
+                    {moduleData.type !== 'Custom' && moduleData.type !== 'Text' && (
+                        <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Label (Key)</label>
+                            <input
+                                type="text"
+                                value={localConfig.key || ''}
+                                onChange={(e) => handleChange('key', e.target.value)}
+                                placeholder={moduleData.type}
+                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-md p-2 focus:outline-none focus:border-blue-500 placeholder-gray-600"
+                            />
+                        </div>
+                    )}
 
                     {/* Specific Fields per Type */}
                     {moduleData.type === 'Command' && (
@@ -95,14 +97,14 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
 
                     {(moduleData.type === 'Custom' || moduleData.type === 'Text') && (
                         <div>
-                            <label className="text-xs text-blue-400 mb-1 block font-bold">Custom Text</label>
+                            <label className="text-xs text-blue-400 mb-1 block font-bold">Display Text</label>
                             <textarea
-                                value={localConfig.text || ''} // Using 'text' property for custom content as per schema often used or implied by 'format'
-                                onChange={(e) => handleChange('text', e.target.value)}
-                                placeholder="Static text content..."
+                                value={localConfig.key || ''}
+                                onChange={(e) => handleChange('key', e.target.value)}
+                                placeholder="Your custom text here..."
                                 className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none"
                             />
-                             <p className="text-[10px] text-gray-500 mt-1">Or use <code>format</code> property for advanced formatting.</p>
+                             <p className="text-[10px] text-gray-500 mt-1">In fastfetch, Custom modules display the <code>key</code> field as output text.</p>
                         </div>
                     )}
                     

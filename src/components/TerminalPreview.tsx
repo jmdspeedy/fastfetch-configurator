@@ -124,8 +124,8 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
       break;
     case 'Custom':
     case 'Text':
-      // Custom modules display just the value, no key/separator
-      return { type: 'custom', value: module.text || module.format || 'Custom Text' };
+      // Custom modules display the 'key' field as output text (fastfetch behavior)
+      return { type: 'custom', value: module.key || module.format || 'Custom Text' };
     default: value = module.type;
   }
 
@@ -269,9 +269,10 @@ export default function TerminalPreview() {
               }
 
               // Custom modules - display just the value without key/separator
+              // fastfetch uses keyColor for Custom module output
               if (data.type === 'custom') {
                 return (
-                  <div key={m.id} className={clsx("whitespace-nowrap", getColorClass(m.outputColor || outputColor))}>
+                  <div key={m.id} className={clsx("whitespace-nowrap", getColorClass(m.keyColor || outputColor))}>
                     {data.value}
                   </div>
                 );
