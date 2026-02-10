@@ -229,6 +229,13 @@ export default function TerminalPreview() {
               const data = getModuleContent(m, separator);
 
               if (data.type === 'title') {
+                if (data.value) {
+                  return (
+                    <div key={m.id} className="mb-1 font-bold text-blue-500">
+                      {data.value}
+                    </div>
+                  );
+                }
                 return (
                   <div key={m.id} className="mb-1">
                     <span className={clsx("font-bold", getColorClass(titleColor))}>user</span>
