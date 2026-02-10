@@ -10,6 +10,7 @@ interface WelcomeScreenProps {
 interface Template {
     name: string;
     download_url: string;
+    category: 'preset' | 'example';
 }
 
 interface GitHubContentItem {
@@ -43,22 +44,45 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
 
-    // Fetch templates from GitHub
+    /**
+     * Fetches all presets from both the root `presets/` directory and the
+     * `presets/examples/` subdirectory in parallel. Tags each template
+     * with a category for grouped rendering.
+     */
     const fetchTemplates = async () => {
         setIsLoadingTemplates(true);
         setError(null);
         try {
-            const response = await fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=dev');
-            if (!response.ok) throw new Error('Failed to fetch templates');
-            const data: GitHubContentItem[] = await response.json();
-            // Filter ensuring we only get .jsonc or .json files and map to our interface
-            const validTemplates = data
-                .filter((item) => item.name.endsWith('.jsonc') || item.name.endsWith('.json'))
-                .map((item) => ({
-                    name: item.name,
-                    download_url: item.download_url
-                }));
-            setTemplates(validTemplates);
+            const [presetsRes, examplesRes] = await Promise.all([
+                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets?ref=dev'),
+                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=dev'),
+            ]);
+
+            if (!presetsRes.ok || !examplesRes.ok) throw new Error('Failed to fetch templates');
+
+            const [presetsData, examplesData]: [GitHubContentItem[], GitHubContentItem[]] = await Promise.all([
+                presetsRes.json(),
+                examplesRes.json(),
+            ]);
+
+            const isJsonFile = (item: GitHubContentItem) =>
+                item.type === 'file' && (item.name.endsWith('.jsonc') || item.name.endsWith('.json'));
+
+            const presetTemplates: Template[] = presetsData
+                .filter(isJsonFile)
+                .map((item) => ({ name: item.name, download_url: item.download_url, category: 'preset' as const }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            const exampleTemplates: Template[] = examplesData
+                .filter(isJsonFile)
+                .map((item) => ({ name: item.name, download_url: item.download_url, category: 'example' as const }))
+                .sort((a, b) => {
+                    const numA = parseInt(a.name);
+                    const numB = parseInt(b.name);
+                    return numA - numB;
+                });
+
+            setTemplates([...presetTemplates, ...exampleTemplates]);
         } catch (err) {
             setError("Failed to load templates. Please try again.");
             console.error(err);
@@ -288,22 +312,65 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                                     <p>Loading templates from GitHub...</p>
                                 </div>
                             ) : (
-                                templates.map((template) => (
-                                    <button
-                                        key={template.name}
-                                        onClick={() => handleSelectTemplate(template)}
-                                        disabled={isLoadingTemplates}
-                                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
-                                           <span className="font-mono text-xs font-bold">{template.name.slice(0, 2)}</span>
-                                        </div>
+                                <>
+                                    {/* Presets Section */}
+                                    {templates.filter(t => t.category === 'preset').length > 0 && (
                                         <div>
-                                            <div className="font-medium text-white">{template.name}</div>
-                                            <div className="text-sm text-gray-500">Official preset from fastfetch-cli repo</div>
+                                            <div className="flex items-center gap-2 px-1 pt-3 pb-2">
+                                                <div className="h-px flex-1 bg-gray-800" />
+                                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Presets</span>
+                                                <div className="h-px flex-1 bg-gray-800" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                {templates.filter(t => t.category === 'preset').map((template) => (
+                                                    <button
+                                                        key={template.name}
+                                                        onClick={() => handleSelectTemplate(template)}
+                                                        disabled={isLoadingTemplates}
+                                                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/20 transition-colors">
+                                                            <FileCode size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-medium text-white">{template.name.replace(/\.jsonc?$/, '')}</div>
+                                                            <div className="text-sm text-gray-500">Official preset</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </button>
-                                ))
+                                    )}
+
+                                    {/* Community Examples Section */}
+                                    {templates.filter(t => t.category === 'example').length > 0 && (
+                                        <div>
+                                            <div className="flex items-center gap-2 px-1 pt-4 pb-2">
+                                                <div className="h-px flex-1 bg-gray-800" />
+                                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Community Examples</span>
+                                                <div className="h-px flex-1 bg-gray-800" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                {templates.filter(t => t.category === 'example').map((template) => (
+                                                    <button
+                                                        key={template.name}
+                                                        onClick={() => handleSelectTemplate(template)}
+                                                        disabled={isLoadingTemplates}
+                                                        className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-violet-500/50 hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-violet-400 group-hover:bg-violet-500/10 transition-colors">
+                                                            <span className="font-mono text-xs font-bold">#{template.name.replace(/\.jsonc?$/, '')}</span>
+                                                        </div>
+                                                        <div>
+                                                            <div className="font-medium text-white">Example {template.name.replace(/\.jsonc?$/, '')}</div>
+                                                            <div className="text-sm text-gray-500">Community example configuration</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
