@@ -62,14 +62,13 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
         };
     }, [isOpen, step]);
 
-    // Reset state when opening
-    useEffect(() => {
-        if (isOpen) {
-            setStep('captcha');
-            setAltchaPayload(null);
-            setInstallCommand('');
-        }
-    }, [isOpen]);
+    /** Resets modal state and calls the parent onClose callback. */
+    const handleClose = () => {
+        setStep('captcha');
+        setAltchaPayload(null);
+        setInstallCommand('');
+        onClose();
+    };
 
     const handleQuickInstall = async () => {
         if (!altchaPayload) {
@@ -108,7 +107,7 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
     const handleDownload = () => {
         const json = generateConfigString(modules, logo, display);
         downloadConfig(json);
-        onClose();
+        handleClose();
     };
 
     const copyToClipboard = () => {
@@ -129,7 +128,7 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
                         {step === 'result' && <Terminal className="text-green-500" />}
                         {step === 'captcha' ? 'Verification' : step === 'options' ? 'Choose Method' : 'Quick Install'}
                     </h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white">
+                    <button onClick={handleClose} className="text-gray-500 hover:text-white">
                         <X size={20} />
                     </button>
                 </div>
@@ -171,10 +170,12 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
 
                     {step === 'result' && (
                         <div className="space-y-4">
-                            <p className="text-sm text-gray-400">Run this command in your terminal. Valid for 5 minutes.</p>
+                            <p className="text-sm text-gray-400">Copy and paste this command in your terminal.</p>
                             <div className="relative group">
-                                <pre className="p-4 bg-black rounded-lg border border-gray-800 text-green-500 font-mono text-xs overflow-x-auto whitespace-pre-wrap break-all">
-                                    {installCommand}
+                                <pre className="p-4 pr-12 bg-black rounded-lg border border-gray-800 text-green-500 font-mono text-xs max-h-24 overflow-hidden whitespace-pre-wrap break-all">
+                                    {installCommand.length > 120
+                                        ? installCommand.slice(0, 120) + '...'
+                                        : installCommand}
                                 </pre>
                                 <button
                                     onClick={copyToClipboard}
@@ -183,6 +184,9 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
                                     {copied ? <Check size={16} /> : <Copy size={16} />}
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                Command is {installCommand.length.toLocaleString()} characters — click copy to get the full command.
+                            </p>
                             <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded text-amber-200 text-xs">
                                 Warning: Only run commands you trust. This will overwrite ~/.config/fastfetch/config.jsonc.
                             </div>
