@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check, Loader2, RefreshCw, ChevronLeft } from 'lucide-react'; // Added Loader2, RefreshCw, ChevronLeft
+import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check, Loader2, RefreshCw, ChevronLeft, Monitor } from 'lucide-react';
 import { useConfigStore } from '@/store/config';
 
 interface WelcomeScreenProps {
@@ -20,14 +20,28 @@ interface GitHubContentItem {
 
 export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     const [importMode, setImportMode] = useState(false);
-    const [templateMode, setTemplateMode] = useState(false); // New state for template mode
-    const [templates, setTemplates] = useState<Template[]>([]); // Store fetched templates
-    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false); // Loading state
+    const [templateMode, setTemplateMode] = useState(false);
+    const [templates, setTemplates] = useState<Template[]>([]);
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [configContent, setConfigContent] = useState('');
     const [copied, setCopied] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { loadConfig, resetConfig } = useConfigStore();
+
+    /**
+     * Detects if the viewport is below the desktop breakpoint (768px).
+     * Listens for resize changes so the blocker appears/disappears dynamically.
+     */
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 767px)');
+        setIsMobile(mediaQuery.matches);
+
+        const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, []);
 
     // Fetch templates from GitHub
     const fetchTemplates = async () => {
@@ -115,6 +129,32 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    /**
+     * Mobile blocker screen — shown when the viewport is below 768px.
+     * Prompts the user to switch to a desktop environment.
+     */
+    if (isMobile) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+                <div className="w-full max-w-md px-8 py-12 text-center">
+                    <div className="mx-auto w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-8 shadow-xl shadow-blue-500/20">
+                        <Monitor className="w-10 h-10 text-blue-400" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white tracking-tight mb-4">
+                        Desktop Only
+                    </h1>
+                    <p className="text-gray-400 text-base leading-relaxed mb-6">
+                        Fastfetch Configurator is designed for desktop environments. Please open this page on a device with a larger screen to use the editor.
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-gray-600 text-sm">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        Minimum width: 768px
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
