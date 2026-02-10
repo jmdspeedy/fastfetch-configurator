@@ -23,6 +23,9 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
 
     if (!moduleData || !localConfig) return null;
 
+    // Normalize type for case-insensitive comparisons (fastfetch accepts both 'Custom' and 'custom')
+    const normalizedType = moduleData.type.toLowerCase();
+
     const handleSave = () => {
         if (localConfig) {
             updateModule(moduleId, localConfig);
@@ -50,7 +53,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                 {/* Body */}
                 <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     {/* Common Field: Key (Label) — hidden for Custom/Text since key is used as display text */}
-                    {moduleData.type !== 'Custom' && moduleData.type !== 'Text' && (
+                    {normalizedType !== 'custom' && normalizedType !== 'text' && (
                         <div>
                             <label className="text-xs text-gray-400 mb-1 block">Label (Key)</label>
                             <input
@@ -64,7 +67,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                     )}
 
                     {/* Specific Fields per Type */}
-                    {moduleData.type === 'Command' && (
+                    {normalizedType === 'command' && (
                         <div>
                             <label className="text-xs text-blue-400 mb-1 block font-bold">Shell Command</label>
                             <textarea
@@ -79,7 +82,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                         </div>
                     )}
 
-                    {moduleData.type === 'File' && (
+                    {normalizedType === 'file' && (
                         <div>
                             <label className="text-xs text-blue-400 mb-1 block font-bold">File Path</label>
                             <input
@@ -95,7 +98,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                         </div>
                     )}
 
-                    {(moduleData.type === 'Custom' || moduleData.type === 'Text') && (
+                    {(normalizedType === 'custom' || normalizedType === 'text') && (
                         <div>
                             <label className="text-xs text-blue-400 mb-1 block font-bold">Display Text</label>
                             <textarea

@@ -23,18 +23,18 @@ import { useState, useMemo } from 'react';
 import ModuleEditor from './ModuleEditor';
 
 const ALL_MODULE_TYPES: ModuleType[] = [
-  'Title', 'Separator', 'OS', 'Host', 'Kernel', 'Uptime', 'Packages', 'Shell', 
-  'Display', 'DE', 'WM', 'WMTheme', 'Theme', 'Icons', 'Font', 'Cursor', 
-  'Terminal', 'TerminalFont', 'CPU', 'GPU', 'Memory', 'Swap', 'Disk', 
-  'Battery', 'PowerAdapter', 'Player', 'Media', 'LocalIP', 'PublicIP', 
-  'Wifi', 'DateTime', 'Locale', 'Vulkan', 'OpenGL', 'OpenCL', 'Users', 
-  'Bluetooth', 'Sound', 'Gamepad', 'Weather', 'NetIO', 'DiskIO', 
-  'PhysicalDisk', 'Version', 'Break', 'Colors', 'Command',
-  'BIOS', 'BluetoothRadio', 'Board', 'Bootmgr', 'Brightness', 'Btrfs',
-  'Camera', 'Chassis', 'CPUCache', 'CPUUsage', 'Custom', 'DNS',
-  'Editor', 'InitSystem', 'Keyboard', 'LM', 'Loadavg', 'Logo',
-  'Monitor', 'Mouse', 'PhysicalMemory', 'Processes', 'TerminalSize',
-  'TerminalTheme', 'TPM', 'Wallpaper', 'Zpool'
+  'title', 'separator', 'os', 'host', 'kernel', 'uptime', 'packages', 'shell', 
+  'display', 'de', 'wm', 'wmtheme', 'theme', 'icons', 'font', 'cursor', 
+  'terminal', 'terminalfont', 'cpu', 'gpu', 'memory', 'swap', 'disk', 
+  'battery', 'poweradapter', 'player', 'media', 'localip', 'publicip', 
+  'wifi', 'datetime', 'locale', 'vulkan', 'opengl', 'opencl', 'users', 
+  'bluetooth', 'sound', 'gamepad', 'weather', 'netio', 'diskio', 
+  'physicaldisk', 'version', 'break', 'colors', 'command',
+  'bios', 'bluetoothradio', 'board', 'bootmgr', 'brightness', 'btrfs',
+  'camera', 'chassis', 'cpucache', 'cpuusage', 'custom', 'dns',
+  'editor', 'initsystem', 'keyboard', 'lm', 'loadavg', 'logo',
+  'monitor', 'mouse', 'physicalmemory', 'processes', 'terminalsize',
+  'terminaltheme', 'tpm', 'wallpaper', 'zpool'
 ];
 
 function SortableItem({ id, type, onDelete, onEdit }: { id: string; type: string; onDelete: () => void; onEdit: () => void }) {

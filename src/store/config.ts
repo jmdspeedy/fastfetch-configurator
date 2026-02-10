@@ -2,18 +2,18 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
 export type ModuleType =
-  | 'Title' | 'Separator' | 'OS' | 'Host' | 'Kernel' | 'Uptime' | 'Packages' | 'Shell'
-  | 'Display' | 'DE' | 'WM' | 'WMTheme' | 'Theme' | 'Icons' | 'Font' | 'Cursor'
-  | 'Terminal' | 'TerminalFont' | 'CPU' | 'GPU' | 'Memory' | 'Swap' | 'Disk'
-  | 'Battery' | 'PowerAdapter' | 'Player' | 'Media' | 'LocalIP' | 'PublicIP'
-  | 'Wifi' | 'DateTime' | 'Locale' | 'Vulkan' | 'OpenGL' | 'OpenCL' | 'Users'
-  | 'Bluetooth' | 'Sound' | 'Gamepad' | 'Weather' | 'NetIO' | 'DiskIO'
-  | 'PhysicalDisk' | 'Version' | 'Break' | 'Colors' | 'Command'
-  | 'BIOS' | 'BluetoothRadio' | 'Board' | 'Bootmgr' | 'Brightness' | 'Btrfs'
-  | 'Camera' | 'Chassis' | 'CPUCache' | 'CPUUsage' | 'Custom' | 'DNS'
-  | 'Editor' | 'InitSystem' | 'Keyboard' | 'LM' | 'Loadavg' | 'Logo'
-  | 'Monitor' | 'Mouse' | 'PhysicalMemory' | 'Processes' | 'TerminalSize'
-  | 'TerminalTheme' | 'TPM' | 'Wallpaper' | 'Zpool';
+  | 'title' | 'separator' | 'os' | 'host' | 'kernel' | 'uptime' | 'packages' | 'shell'
+  | 'display' | 'de' | 'wm' | 'wmtheme' | 'theme' | 'icons' | 'font' | 'cursor'
+  | 'terminal' | 'terminalfont' | 'cpu' | 'gpu' | 'memory' | 'swap' | 'disk'
+  | 'battery' | 'poweradapter' | 'player' | 'media' | 'localip' | 'publicip'
+  | 'wifi' | 'datetime' | 'locale' | 'vulkan' | 'opengl' | 'opencl' | 'users'
+  | 'bluetooth' | 'sound' | 'gamepad' | 'weather' | 'netio' | 'diskio'
+  | 'physicaldisk' | 'version' | 'break' | 'colors' | 'command'
+  | 'bios' | 'bluetoothradio' | 'board' | 'bootmgr' | 'brightness' | 'btrfs'
+  | 'camera' | 'chassis' | 'cpucache' | 'cpuusage' | 'custom' | 'dns'
+  | 'editor' | 'initsystem' | 'keyboard' | 'lm' | 'loadavg' | 'logo'
+  | 'monitor' | 'mouse' | 'physicalmemory' | 'processes' | 'terminalsize'
+  | 'terminaltheme' | 'tpm' | 'wallpaper' | 'zpool';
 
 export interface ModuleConfig {
   id: string; // Internal ID for drag-and-drop
@@ -79,34 +79,34 @@ interface ConfigState {
 
 // Default Modules (mimicking default fastfetch)
 const defaultModules: ModuleConfig[] = [
-  { id: '1', type: 'Title' },
-  { id: '2', type: 'Separator' },
-  { id: '3', type: 'OS' },
-  { id: '4', type: 'Host' },
-  { id: '5', type: 'Kernel' },
-  { id: '6', type: 'Uptime' },
-  { id: '7', type: 'Packages' },
-  { id: '8', type: 'Shell' },
-  { id: '9', type: 'Display' },
-  { id: '10', type: 'DE' },
-  { id: '11', type: 'WM' },
-  { id: '12', type: 'WMTheme' },
-  { id: '13', type: 'Theme' },
-  { id: '14', type: 'Icons' },
-  { id: '15', type: 'Font' },
-  { id: '16', type: 'Cursor' },
-  { id: '17', type: 'Terminal' },
-  { id: '18', type: 'TerminalFont' },
-  { id: '19', type: 'CPU' },
-  { id: '20', type: 'GPU' },
-  { id: '21', type: 'Memory' },
-  { id: '22', type: 'Swap' },
-  { id: '23', type: 'Disk' },
-  { id: '24', type: 'LocalIP' },
-  { id: '25', type: 'Battery' },
-  { id: '26', type: 'PowerAdapter' },
-  { id: '27', type: 'Break' },
-  { id: '28', type: 'Colors' },
+  { id: '1', type: 'title' },
+  { id: '2', type: 'separator' },
+  { id: '3', type: 'os' },
+  { id: '4', type: 'host' },
+  { id: '5', type: 'kernel' },
+  { id: '6', type: 'uptime' },
+  { id: '7', type: 'packages' },
+  { id: '8', type: 'shell' },
+  { id: '9', type: 'display' },
+  { id: '10', type: 'de' },
+  { id: '11', type: 'wm' },
+  { id: '12', type: 'wmtheme' },
+  { id: '13', type: 'theme' },
+  { id: '14', type: 'icons' },
+  { id: '15', type: 'font' },
+  { id: '16', type: 'cursor' },
+  { id: '17', type: 'terminal' },
+  { id: '18', type: 'terminalfont' },
+  { id: '19', type: 'cpu' },
+  { id: '20', type: 'gpu' },
+  { id: '21', type: 'memory' },
+  { id: '22', type: 'swap' },
+  { id: '23', type: 'disk' },
+  { id: '24', type: 'localip' },
+  { id: '25', type: 'battery' },
+  { id: '26', type: 'poweradapter' },
+  { id: '27', type: 'break' },
+  { id: '28', type: 'colors' },
 ];
 
 export const useConfigStore = create<ConfigState>((set) => ({
@@ -254,11 +254,11 @@ export const useConfigStore = create<ConfigState>((set) => ({
         display: parsed.display || {},
         modules: parsed.modules?.map((m: string | ModuleConfig) => {
           if (typeof m === 'string') {
-            // Simple string module like "Title"
-            return { id: uuidv4(), type: m };
+            // Simple string module like "title" — normalize to lowercase
+            return { id: uuidv4(), type: m.toLowerCase() };
           } else {
-            // Object module with additional properties
-            return { ...m, id: uuidv4(), type: m.type };
+            // Object module with additional properties — normalize type to lowercase
+            return { ...m, id: uuidv4(), type: m.type.toLowerCase() };
           }
         }) || defaultModules
       });
