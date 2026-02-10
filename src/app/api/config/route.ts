@@ -4,6 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 const MAX_STORAGE_SIZE = 1000; // Cap in-memory storage to prevent OOM
 const tempStorage = new Map<string, { config: string, logo?: string, expires: number }>();
 
+// Unique ID for this serverless instance — helps diagnose Vercel instance partitioning
+const INSTANCE_ID = Math.random().toString(36).substring(2, 8);
+console.log(`[instance:${INSTANCE_ID}] Cold start — tempStorage initialized (empty)`);
+
+function logStorageState(context: string) {
+  const keys = Array.from(tempStorage.keys());
+  console.log(`[instance:${INSTANCE_ID}] [${context}] Storage size: ${tempStorage.size}, keys: [${keys.join(', ')}]`);
+}
+
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
 async function verifyTurnstile(token: string) {
@@ -56,11 +65,14 @@ export async function GET(req: NextRequest) {
     return bashSafeError('Invalid ID', 400);
   }
 
+  logStorageState(`GET id=${id}`);
   const data = tempStorage.get(id);
-  
+
   if (!data) {
+    console.warn(`[instance:${INSTANCE_ID}] Config NOT FOUND for id=${id}. This likely means the POST was handled by a different instance.`);
     return bashSafeError('Configuration not found or expired. Please generate a new install command.', 404);
   }
+  console.log(`[instance:${INSTANCE_ID}] Config FOUND for id=${id}, expires in ${Math.round((data.expires - Date.now()) / 1000)}s`);
 
   if (Date.now() > data.expires) {
     tempStorage.delete(id);
@@ -69,9 +81,9 @@ export async function GET(req: NextRequest) {
 
   if (type === 'config') {
     return new NextResponse(data.config, {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, max-age=0' 
+        'Cache-Control': 'no-store, max-age=0'
       }
     });
   }
@@ -81,7 +93,7 @@ export async function GET(req: NextRequest) {
       return bashSafeError('No logo for this config', 404);
     }
     return new NextResponse(data.logo, {
-      headers: { 
+      headers: {
         'Content-Type': 'text/plain',
         'Cache-Control': 'no-store, max-age=0'
       }
@@ -92,10 +104,10 @@ export async function GET(req: NextRequest) {
     const baseUrl = req.nextUrl.origin;
     const configPath = `~/.config/fastfetch/config.jsonc`;
     const logoPath = `~/.config/fastfetch/logo.txt`;
-    
+
     // Sanitize baseUrl to prevent header injection or weird scripts
     const safeBaseUrl = baseUrl.replace(/[^\w\d.:\/-]/g, '');
-    
+
     let script = `#!/bin/bash\nmkdir -p ~/.config/fastfetch\n`;
     script += `curl -s "${safeBaseUrl}/api/config?id=${id}&type=config" -o ${configPath}\n`;
     if (data.logo) {
@@ -104,7 +116,7 @@ export async function GET(req: NextRequest) {
     script += `echo "Fastfetch configuration installed to ${configPath}"\n`;
 
     return new NextResponse(script, {
-      headers: { 
+      headers: {
         'Content-Type': 'text/x-shellscript',
         'Cache-Control': 'no-store, max-age=0'
       }
@@ -119,7 +131,7 @@ export async function POST(req: NextRequest) {
     // Basic body size limit check (approximate via content-length if available)
     const contentLength = parseInt(req.headers.get('content-length') || '0');
     if (contentLength > 1024 * 1024) { // 1MB limit
-       return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
     }
 
     const body = await req.json();
@@ -162,6 +174,9 @@ export async function POST(req: NextRequest) {
       logo,
       expires: Date.now() + 5 * 60 * 1000 // 5 minutes
     });
+
+    console.log(`[instance:${INSTANCE_ID}] Config STORED with id=${id}, TTL=300s`);
+    logStorageState('POST after store');
 
     return NextResponse.json({ id });
   } catch (error) {
