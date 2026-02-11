@@ -86,7 +86,7 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                                 setImportError(null);
                             }}
                             placeholder="Paste your JSON configuration here..."
-                            className="w-full h-40 bg-[#0a0a0a] border border-gray-800 rounded-lg p-4 text-sm font-mono text-gray-300 focus:outline-none focus:border-violet-500 transition-colors resize-none"
+                            className="w-full h-40 bg-[#0a0a0a] border border-gray-800 rounded-lg p-4 text-sm font-mono text-gray-300 focus:outline-none focus:border-violet-500 transition-colors resize-none custom-scrollbar"
                         />
                         {importError && (
                             <div className="absolute bottom-4 right-4 text-red-400 text-xs bg-red-400/10 px-2 py-1 rounded border border-red-400/20">

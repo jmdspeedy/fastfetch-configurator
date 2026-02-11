@@ -31,6 +31,9 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { loadConfig, resetConfig } = useConfigStore();
 
+    const [osType, setOsType] = useState<'macos' | 'windows' | 'linux' | 'unknown'>('unknown');
+    const [linuxBackend, setLinuxBackend] = useState<'wayland' | 'x11'>('wayland');
+
     /**
      * Detects if the viewport is below the desktop breakpoint (768px).
      * Listens for resize changes so the blocker appears/disappears dynamically.
@@ -43,6 +46,29 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
+
+    useEffect(() => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.includes('mac')) setOsType('macos');
+        else if (userAgent.includes('win')) setOsType('windows');
+        else if (userAgent.includes('linux')) setOsType('linux');
+        else setOsType('unknown');
+    }, []);
+
+    const getCopyCommand = () => {
+        switch (osType) {
+            case 'macos':
+                return 'pbcopy < ~/.config/fastfetch/config.jsonc';
+            case 'windows':
+                return 'cat $env:USERPROFILE/.config/fastfetch/config.jsonc | clip';
+            case 'linux':
+                return linuxBackend === 'wayland'
+                    ? 'wl-copy < ~/.config/fastfetch/config.jsonc'
+                    : 'xclip -selection clipboard < ~/.config/fastfetch/config.jsonc';
+            default:
+                return 'cat ~/.config/fastfetch/config.jsonc';
+        }
+    };
 
     /**
      * Fetches all presets from both the root `presets/` directory and the
@@ -148,8 +174,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
 
     const handleCopyCommand = (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent card click
-        const configPath = "cat ~/.config/fastfetch/config.jsonc";
-        navigator.clipboard.writeText(configPath);
+        const command = getCopyCommand();
+        navigator.clipboard.writeText(command);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -233,21 +259,41 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                         >
                             <div className="absolute top-6 right-6 group/tooltip" onClick={(e) => e.stopPropagation()}>
                                 <CircleHelp className="w-5 h-5 text-gray-600 hover:text-gray-300 transition-colors cursor-help" />
-                                <div className="absolute right-0 top-8 w-72 p-4 bg-gray-800 rounded-lg border border-gray-700 shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-20 text-xs text-gray-300">
-                                    <p className="font-semibold text-white mb-2">Your config location:</p>
+                                <div className="absolute right-0 top-8 w-80 p-4 bg-gray-800 rounded-lg border border-gray-700 shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-20 text-xs text-gray-300">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="font-semibold text-white">Copy your config:</p>
+                                        <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded text-[10px] text-gray-400 border border-gray-700/50">
+                                            {osType === 'linux' ? (
+                                                <select
+                                                    value={linuxBackend}
+                                                    onChange={(e) => setLinuxBackend(e.target.value as 'wayland' | 'x11')}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="bg-transparent border-none p-0 text-blue-400 font-medium focus:ring-0 cursor-pointer appearance-none hover:text-blue-300 transition-colors outline-none"
+                                                >
+                                                    <option value="wayland">Linux (Wayland)</option>
+                                                    <option value="x11">Linux (X11)</option>
+                                                </select>
+                                            ) : (
+                                                <span className="text-blue-400 font-medium capitalize">
+                                                    {osType === 'macos' ? 'macOS' : osType}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     <div className="bg-black/50 p-2 rounded flex items-center justify-between gap-2 mb-2 font-mono border border-gray-700">
-                                        <code className="text-[10px] break-all">
-                                            cat ~/.config/fastfetch/config.jsonc
+                                        <code className="text-[10px] break-all text-blue-300">
+                                            {getCopyCommand()}
                                         </code>
                                         <button
                                             onClick={handleCopyCommand}
                                             className="p-1 hover:bg-gray-700 rounded transition-colors text-gray-400 hover:text-white shrink-0"
-                                            title="Copy path"
+                                            title="Copy command"
                                         >
                                             {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                                         </button>
                                     </div>
-                                    <p>Upload your existing config file, or run <code className="bg-black/30 px-1 rounded">fastfetch --gen-config</code> to generate one first.</p>
+                                    <p>Upload your existing config file, or run this command to copy it to your clipboard.</p>
                                 </div>
                             </div>
 
@@ -409,7 +455,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                                     setError(null);
                                 }}
                                 placeholder="Paste your JSON configuration here..."
-                                className="w-full h-48 bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 text-sm font-mono text-gray-300 focus:outline-none focus:border-violet-500 transition-colors resize-none"
+                                className="w-full h-48 bg-[#0a0a0a] border border-gray-800 rounded-xl p-4 text-sm font-mono text-gray-300 focus:outline-none focus:border-violet-500 transition-colors resize-none custom-scrollbar"
                             />
                             {error && (
                                 <div className="absolute bottom-4 right-4 text-red-400 text-xs bg-red-400/10 px-2 py-1 rounded border border-red-400/20">

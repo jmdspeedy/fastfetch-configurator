@@ -13,7 +13,7 @@ interface ModuleEditorProps {
 export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     const { modules, updateModule } = useConfigStore();
     const moduleData = modules.find((m) => m.id === moduleId);
-    
+
     // Initialize state directly from found module
     // We rely on the parent component to supply a unique `key` (e.g. moduleId) 
     // to force a remount when switching modules, avoiding the need for useEffect sync.
@@ -74,7 +74,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                                 value={localConfig.text || ''}
                                 onChange={(e) => handleChange('text', e.target.value)}
                                 placeholder='echo "Hello World"'
-                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm font-mono rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none"
+                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm font-mono rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none custom-scrollbar"
                             />
                             <p className="text-[10px] text-gray-500 mt-1">
                                 Command to execute. Output will be displayed.
@@ -105,14 +105,14 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                                 value={localConfig.key || ''}
                                 onChange={(e) => handleChange('key', e.target.value)}
                                 placeholder="Your custom text here..."
-                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none"
+                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none custom-scrollbar"
                             />
-                             <p className="text-[10px] text-gray-500 mt-1">In fastfetch, Custom modules display the <code>key</code> field as output text.</p>
+                            <p className="text-[10px] text-gray-500 mt-1">In fastfetch, Custom modules display the <code>key</code> field as output text.</p>
                         </div>
                     )}
-                    
-                     {/* Common Field: Format */}
-                     <div>
+
+                    {/* Common Field: Format */}
+                    <div>
                         <label className="text-xs text-gray-400 mb-1 block">Format String</label>
                         <FormatStringInput
                             value={localConfig.format || ''}
