@@ -181,18 +181,18 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
-            <div className="w-full max-w-4xl p-8 relative">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex custom-scrollbar bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
+            <div className="w-full max-w-4xl p-8 relative m-auto">
                 <div className="absolute top-0 left-0 w-full h-full bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
 
                 <div className="relative text-center mb-12">
                     <div className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-blue-500/20 bg-black/20 backdrop-blur-sm">
-                        <Image 
-                            src="/logo.svg" 
-                            alt="Fastfetch Configurator" 
-                            width={64} 
-                            height={64} 
-                            className="w-16 h-16" 
+                        <Image
+                            src="/logo.svg"
+                            alt="Fastfetch Configurator"
+                            width={64}
+                            height={64}
+                            className="w-16 h-16"
                             priority
                         />
                     </div>
@@ -266,9 +266,9 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                 ) : templateMode ? (
                     // Template Selection Mode
                     <div className="max-w-4xl mx-auto bg-[#161616] border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[500px]">
-                         <div className="flex items-center justify-between mb-6 shrink-0">
+                        <div className="flex items-center justify-between mb-6 shrink-0">
                             <div className="flex items-center gap-3">
-                                <button 
+                                <button
                                     onClick={() => setTemplateMode(false)}
                                     className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
                                 >
@@ -276,7 +276,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                                 </button>
                                 <h3 className="text-xl font-semibold text-white">Select a Template</h3>
                             </div>
-                            <button 
+                            <button
                                 onClick={fetchTemplates}
                                 className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
                                 title="Refresh templates"
@@ -292,8 +292,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                         )}
 
                         <div className="flex-1 overflow-y-auto min-h-0 pr-2 space-y-2 custom-scrollbar">
-                             {/* Empty Start Option */}
-                             <button
+                            {/* Empty Start Option */}
+                            <button
                                 onClick={handleStartEmpty}
                                 className="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1a1a] transition-all text-left group"
                             >
