@@ -19,16 +19,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X, Plus, Search, Settings } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import ModuleEditor from './ModuleEditor';
 
 const ALL_MODULE_TYPES: ModuleType[] = [
-  'title', 'separator', 'os', 'host', 'kernel', 'uptime', 'packages', 'shell', 
-  'display', 'de', 'wm', 'wmtheme', 'theme', 'icons', 'font', 'cursor', 
-  'terminal', 'terminalfont', 'cpu', 'gpu', 'memory', 'swap', 'disk', 
-  'battery', 'poweradapter', 'player', 'media', 'localip', 'publicip', 
-  'wifi', 'datetime', 'locale', 'vulkan', 'opengl', 'opencl', 'users', 
-  'bluetooth', 'sound', 'gamepad', 'weather', 'netio', 'diskio', 
+  'title', 'separator', 'os', 'host', 'kernel', 'uptime', 'packages', 'shell',
+  'display', 'de', 'wm', 'wmtheme', 'theme', 'icons', 'font', 'cursor',
+  'terminal', 'terminalfont', 'cpu', 'gpu', 'memory', 'swap', 'disk',
+  'battery', 'poweradapter', 'player', 'media', 'localip', 'publicip',
+  'wifi', 'datetime', 'locale', 'vulkan', 'opengl', 'opencl', 'users',
+  'bluetooth', 'sound', 'gamepad', 'weather', 'netio', 'diskio',
   'physicaldisk', 'version', 'break', 'colors', 'command',
   'bios', 'bluetoothradio', 'board', 'bootmgr', 'brightness', 'btrfs',
   'camera', 'chassis', 'cpucache', 'cpuusage', 'custom', 'dns',
@@ -63,21 +63,21 @@ function SortableItem({ id, type, onDelete, onEdit }: { id: string; type: string
       <div className="flex-1 font-mono text-sm text-gray-200 truncate">
         {type}
       </div>
-      
+
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button 
-            onClick={onEdit}
-            className="p-1 text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
-            title="Edit Module"
+        <button
+          onClick={onEdit}
+          className="p-1 text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
+          title="Edit Module"
         >
-            <Settings size={16} />
+          <Settings size={16} />
         </button>
-        <button 
-            onClick={onDelete}
-            className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-            title="Remove Module"
+        <button
+          onClick={onDelete}
+          className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+          title="Remove Module"
         >
-            <X size={16} />
+          <X size={16} />
         </button>
       </div>
     </div>
@@ -89,6 +89,19 @@ export default function ModuleList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [editingModuleId, setEditingModuleId] = useState<string | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowAddMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [wrapperRef]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -116,11 +129,11 @@ export default function ModuleList() {
     <>
       <div className="flex flex-col h-full gap-4">
         {/* Add Module Search/Trigger */}
-        <div className="relative">
+        <div ref={wrapperRef} className="relative">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-2 top-2.5 text-gray-500" />
-              <input 
+              <input
                 type="text"
                 placeholder="Add module..."
                 value={searchTerm}
@@ -132,7 +145,7 @@ export default function ModuleList() {
                 className="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md pl-8 pr-2 py-2 focus:outline-none focus:border-blue-500"
               />
             </div>
-            <button 
+            <button
               onClick={() => setShowAddMenu(!showAddMenu)}
               className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
@@ -176,12 +189,12 @@ export default function ModuleList() {
               strategy={verticalListSortingStrategy}
             >
               {modules.map((m) => (
-                <SortableItem 
-                  key={m.id} 
-                  id={m.id} 
-                  type={m.type} 
+                <SortableItem
+                  key={m.id}
+                  id={m.id}
+                  type={m.type}
                   onDelete={() => removeModule(m.id)}
-                  onEdit={() => setEditingModuleId(m.id)} 
+                  onEdit={() => setEditingModuleId(m.id)}
                 />
               ))}
             </SortableContext>
@@ -191,10 +204,10 @@ export default function ModuleList() {
 
       {/* Module Editor Modal */}
       {editingModuleId && (
-        <ModuleEditor 
+        <ModuleEditor
           key={editingModuleId}
-          moduleId={editingModuleId} 
-          onClose={() => setEditingModuleId(null)} 
+          moduleId={editingModuleId}
+          onClose={() => setEditingModuleId(null)}
         />
       )}
     </>

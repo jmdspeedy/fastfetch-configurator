@@ -21,10 +21,10 @@ export default function JsonPreview() {
     // 2. Construct full object
     const config = {
       $schema: 'https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json',
-      logo: { 
+      logo: {
         ...logo,
         _presetName: undefined, // Remove internal flags
-        _customContent: undefined 
+        _customContent: undefined
       },
       display,
       modules: cleanModules,
@@ -43,7 +43,7 @@ export default function JsonPreview() {
     <div className="flex flex-col h-full bg-[#1e1e1e] text-gray-300 rounded-lg overflow-hidden border border-gray-700 shadow-xl">
       <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-gray-700">
         <span className="text-xs font-mono uppercase tracking-wider text-gray-500">config.jsonc</span>
-        <button 
+        <button
           onClick={copyToClipboard}
           className="text-xs hover:text-white transition-colors flex items-center gap-1.5"
         >
@@ -51,7 +51,7 @@ export default function JsonPreview() {
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <div className="flex-1 overflow-auto p-4 font-mono text-sm">
+      <div className="flex-1 overflow-auto p-4 font-mono text-sm custom-scrollbar">
         <pre>{generateConfig()}</pre>
       </div>
     </div>

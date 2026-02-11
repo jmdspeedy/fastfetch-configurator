@@ -39,7 +39,7 @@ const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ')
 
   // Normalize type to Title Case for case-insensitive matching
   const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();
-  
+
   switch (normalizedType) {
     case 'Title': return { type: 'title', value: 'user@hostname' };
     case 'Separator': return { type: 'separator', value: '-------------------' };
@@ -212,7 +212,7 @@ export default function TerminalPreview() {
       </div>
 
       {/* Terminal Content */}
-      <div className="p-6 text-gray-300 overflow-auto">
+      <div className="p-6 text-gray-300 overflow-auto custom-scrollbar">
         <div className="flex gap-6">
           {/* Logo */}
           <div className="font-bold whitespace-pre leading-tight select-none">
