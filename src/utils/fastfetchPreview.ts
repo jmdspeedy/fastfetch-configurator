@@ -59,19 +59,29 @@ const LABELS: Record<string, string> = {
   terminaltheme: 'Terminal Theme', tpm: 'TPM', wallpaper: 'Wallpaper', zpool: 'Zpool', codec: 'Codec',
 };
 
-const KEY_ICONS: Record<string, string> = {
-  os: '', host: '󰇅', kernel: '', uptime: '󰅐', packages: '󰏖', shell: '', display: '󰍹',
-  de: '󰧨', wm: '󰖲', cpu: '󰻠', gpu: '󰢮', memory: '󰍛', disk: '󰋊', battery: '󰁹',
-  terminal: '', wifi: '󰖩', localip: '󰩟', bluetooth: '󰂯', sound: '󰕾', users: '󰀄',
+const RENDER_ICONS: Record<string, string> = {
+  os: '\u{f303}', host: '\u{f0249}', kernel: '\uf013', uptime: '\u{f0150}', packages: '\u{f0f1c}', shell: '\uf489', display: '\u{f0379}',
+  de: '\uf488', wm: '\uf487', cpu: '\uf4bc', gpu: '\u{f0fb2}', memory: '\uefc5', swap: '\u{f04e1}', disk: '\uf0a0', battery: '\u{f00de}',
+  terminal: '\ue795', terminalfont: '\uf031', wifi: '\uf1eb', localip: '\u{f0a5f}', bluetooth: '\uf293', sound: '\uf028', users: '\uf007',
+  locale: '\uf1ab', theme: '\uf53f', icons: '\u{f003b}', font: '\uf031', cursor: '\uf245', brightness: '\u{f00de}',
 };
+
+function moduleIcon(type: string, values: Record<string, string>): string {
+  if (type === 'os') {
+    const system = `${values.sysname || ''} ${values.name || ''} ${values['pretty-name'] || ''}`.toLowerCase();
+    if (system.includes('windows')) return '\ue70f';
+    if (system.includes('darwin') || system.includes('macos')) return '\uf8ff';
+  }
+  return RENDER_ICONS[type] || '\uf192';
+}
 
 const DEFAULT_FORMATS: Record<string, string> = {
   os: '{pretty-name} {arch}', host: '{name} {version}', kernel: '{sysname} {release}', uptime: '{formatted}',
   packages: '{all}', shell: '{pretty-name} {version}', display: '{width}x{height} @ {scale-factor}x in {inch}"{?refresh-rate}, {refresh-rate} Hz{?}{?type} [{type}]{?}',
   de: '{pretty-name}{?version} {version}{?}', wm: '{pretty-name}{?version} {version}{?}', wmtheme: '{result}', theme: '{theme1}', icons: '{icons1}',
   font: '{combined}', cursor: '{theme}', terminal: '{pretty-name} {version}', terminalfont: '{combined}',
-  cpu: '{name} ({cores-logical}) @ {freq-max}', gpu: '{name}{?frequency} @ {frequency}{?}{?dedicated-total} ({dedicated-total}){?}{?type} [{type}]{?}', memory: '{used} / {total} ({percentage}%)', swap: '{used} / {total} ({percentage}%)',
-  disk: '{size-used} / {size-total} ({size-percentage}%) - {filesystem}', battery: '{capacity}% [{status}]', poweradapter: '{watts}W',
+  cpu: '{name} ({cores-logical}) @ {freq-max}', gpu: '{name}{?frequency} @ {frequency}{?}{?dedicated-total} ({dedicated-total}){?}{?type} [{type}]{?}', memory: '{used} / {total} ({percentage})', swap: '{used} / {total} ({percentage})',
+  disk: '{size-used} / {size-total} ({size-percentage}) - {filesystem}', battery: '{capacity} [{status}]', poweradapter: '{watts}W',
   player: '{player}', media: '{combined}', localip: '{ipv4}', publicip: '{ip}', wifi: '{ssid} ({signal-quality}%)',
   datetime: '{year}-{month-pretty}-{day-pretty} {hour-pretty}:{minute-pretty}:{second-pretty}', locale: '{result}',
   vulkan: '{driver} {api-version}', opengl: '{version} ({renderer})', opencl: '{version} ({name})', users: '{name}',
@@ -100,18 +110,22 @@ const moduleColor = (value: unknown, fallback: string) => typeof value === 'stri
 
 const trimRendered = (value: string) => value.replace(/[ \t]+\n/g, '\n').trimEnd();
 
-function formatBytes(value: number, digits: number): string {
+function formatBytes(value: number, digits: number, options: { si?: boolean; maxPrefix?: string; spaceBeforeUnit?: unknown } = {}): string {
   if (!Number.isFinite(value)) return '';
-  if (value < 1024) return `${Math.round(value)} B`;
-  const units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+  const divisor = options.si ? 1000 : 1024;
+  const units = options.si ? ['kB', 'MB', 'GB', 'TB', 'PB'] : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+  const maxIndex = options.maxPrefix ? ({ B: 0, KB: 1, MB: 2, GB: 3, TB: 4, PB: 5 }[options.maxPrefix.toUpperCase()] ?? units.length) : units.length;
   let amount = value;
   let unit = 'B';
-  for (const candidate of units) {
-    amount /= 1024;
+  for (let index = 0; index < units.length; index++) {
+    const candidate = units[index];
+    if (index + 1 > maxIndex) break;
+    amount /= divisor;
     unit = candidate;
-    if (Math.abs(amount) < 1024 || candidate === units[units.length - 1]) break;
+    if (Math.abs(amount) < divisor || index + 1 === maxIndex || index === units.length - 1) break;
   }
-  return `${amount.toFixed(digits)} ${unit}`;
+  const space = String(options.spaceBeforeUnit ?? 'default').toLowerCase() === 'never' ? '' : ' ';
+  return `${amount.toFixed(digits)}${space}${unit}`;
 }
 
 function applyDisplayFormatting(moduleType: string, values: Record<string, string>, display: DisplayConfig): Record<string, string> {
@@ -119,11 +133,12 @@ function applyDisplayFormatting(moduleType: string, values: Record<string, strin
   const size = (display.size || {}) as Record<string, unknown>;
   const freq = (display.freq || {}) as Record<string, unknown>;
   const sizeDigits = typeof size.ndigits === 'number' ? size.ndigits : 2;
+  const sizeOptions = { si: String(size.binaryPrefix || '').toLowerCase() === 'si', maxPrefix: typeof size.maxPrefix === 'string' ? size.maxPrefix : undefined, spaceBeforeUnit: size.spaceBeforeUnit };
   const freqDigits = typeof freq.ndigits === 'number' ? freq.ndigits : 2;
   const freqSpace = String(freq.spaceBeforeUnit ?? (display as Record<string, unknown>).freqSpaceBeforeUnit ?? 'default').toLowerCase() === 'never' ? '' : ' ';
   for (const field of ['used', 'total', 'free', 'available', 'dedicated-total', 'dedicated-used', 'shared-total', 'shared-used', 'size-used', 'size-total', 'size-free', 'size-available']) {
     const raw = next[`${field}-bytes`] || next[`bytes-${field}`];
-    if (raw && /^\d+(?:\.\d+)?$/.test(raw)) next[field] = formatBytes(Number(raw), sizeDigits);
+    if (raw && /^\d+(?:\.\d+)?$/.test(raw)) next[field] = formatBytes(Number(raw), sizeDigits, sizeOptions);
   }
   for (const field of ['freq-base', 'freq-max', 'frequency']) {
     const raw = next[`${field}-mhz`];
@@ -141,6 +156,7 @@ function percentSettings(moduleConfig: ModuleConfig, display: DisplayConfig): Pe
   const displayPercent = (displayAny.percent || {}) as Record<string, unknown>;
   const displayBar = (displayAny.bar || {}) as Record<string, unknown>;
   const barChars = (displayBar.char || {}) as Record<string, unknown>;
+  const noBarBorder = displayBar.border === null;
   const barBorder = (displayBar.border || {}) as Record<string, unknown>;
   const rawType = modulePercent.type ?? displayPercent.type ?? displayAny.percentType;
   const type = String(rawType ?? 'num').toLowerCase();
@@ -156,17 +172,20 @@ function percentSettings(moduleConfig: ModuleConfig, display: DisplayConfig): Pe
   const digits = Number(modulePercent.ndigits ?? displayPercent.ndigits ?? displayAny.percentNdigits ?? 0);
   const spaceBeforeUnit = String(modulePercent.spaceBeforeUnit ?? displayPercent.spaceBeforeUnit ?? displayAny.percentSpaceBeforeUnit ?? 'default').toLowerCase() === 'always';
   const width = Number(modulePercent.width ?? displayPercent.width ?? displayBar.width ?? displayAny.barWidth ?? 10);
+  const borderLeft = noBarBorder ? '' : String(barBorder.leftElapsed ?? barBorder.left ?? '[ ');
+  const borderRight = noBarBorder ? '' : String(barBorder.rightElapsed ?? barBorder.right ?? ' ]');
+  const explicitBorder = noBarBorder || Object.keys(barBorder).length > 0;
   return {
     number,
     bar,
     hideOthers,
     digits: Number.isFinite(digits) ? Math.max(0, digits) : 0,
-    width: Number.isFinite(width) ? Math.max(1, width) : 10,
+    width: Number.isFinite(width) ? Math.max(1, width - (explicitBorder ? borderLeft.length + borderRight.length : 0)) : 10,
     spaceBeforeUnit,
     elapsedChar: String(barChars.elapsed ?? '█'),
     totalChar: String(barChars.total ?? '-'),
-    borderLeft: String(barBorder.left ?? '[ '),
-    borderRight: String(barBorder.right ?? ' ]'),
+    borderLeft,
+    borderRight,
   };
 }
 
@@ -463,6 +482,15 @@ function getModuleValues(moduleType: string, profile: PreviewProfile, display: D
   const base = isCaptureProfile(profile) ? {} : getDummyValues(moduleType);
   const values = { ...base, ...selected };
   if (type === 'os' && !values.arch) values.arch = profile.architecture;
+  if (type === 'os' && isCaptureProfile(profile)) {
+    const kernel = profile.values.kernel;
+    const kernelValue = Array.isArray(kernel) ? kernel[0] : kernel;
+    values.sysname = kernelValue?.sysname || kernelValue?.name || values.sysname || (profile.id === 'windows' ? 'WIN32_NT' : profile.id === 'macos' ? 'Darwin' : 'Linux');
+  } else if (type === 'os' && !values.sysname) {
+    const kernel = profile.values.kernel;
+    const kernelValue = Array.isArray(kernel) ? kernel[0] : kernel;
+    values.sysname = kernelValue?.sysname || kernelValue?.name || values.name || '';
+  }
   if (type === 'kernel' && !values.sysname && values.name) values.sysname = values.name;
   return applyDisplayFormatting(type, values, display);
 }
@@ -481,6 +509,11 @@ function getModuleValueSets(moduleType: string, profile: PreviewProfile, display
   const mapped = values.map((item) => {
     const next = { ...base, ...item };
     if (type === 'os' && !next.arch) next.arch = profile.architecture;
+    if (type === 'os' && isCaptureProfile(profile)) {
+      const kernel = profile.values.kernel;
+      const kernelValue = Array.isArray(kernel) ? kernel[0] : kernel;
+      next.sysname = kernelValue?.sysname || kernelValue?.name || next.sysname || (profile.id === 'windows' ? 'WIN32_NT' : profile.id === 'macos' ? 'Darwin' : 'Linux');
+    }
     if (type === 'kernel' && !next.sysname && next.name) next.sysname = next.name;
     return applyDisplayFormatting(type, next, display);
   });
@@ -494,11 +527,13 @@ function getModuleValueSets(moduleType: string, profile: PreviewProfile, display
 }
 
 function evaluateConditions(module: ModuleConfig, profile: PreviewProfile): boolean {
+  const moduleType = normalizeType(module.type);
+  if (['break', 'colors', 'custom', 'logo', 'separator', 'text', 'title'].includes(moduleType)) return true;
   const condition = module.condition as Record<string, unknown> | undefined;
   if (!condition) {
     if (isCaptureProfile(profile)) {
-      const captured = profile.succeeded?.[normalizeType(module.type)];
-      if (captured === false && !(normalizeType(module.type) === 'monitor' && profile.values.display !== undefined)) return false;
+      const captured = profile.succeeded?.[moduleType];
+      if (captured === false && !(moduleType === 'monitor' && profile.values.display !== undefined)) return false;
     }
     return true;
   }
@@ -523,13 +558,27 @@ function replaceFormatTokens(format: string, moduleType: string, values: Record<
   let source = format.replace(/\{\{/g, '\u0000').replace(/\}\}/g, '\u0001');
   const placeholders = getFormatPlaceholders(moduleType);
   let implicitIndex = 0;
-  const valueFor = (name: string) => {
+  const formatPlaceholderValue = (name: string, value: string | undefined) => {
+    if (!value) return '';
+    if (moduleType === 'display' && name === 'inch' && /^\d+\.0+$/.test(value)) return String(Number(value));
+    return ['percentage', 'size-percentage', 'capacity'].includes(name) && !value.endsWith('%') ? `${value}%` : value;
+  };
+  const valueFor = (name: string): string => {
     if (name === '') return valueFor(String(++implicitIndex));
+    const modifier = /^([^:]+):(\d+)$/.exec(name);
+    if (modifier) return valueFor(modifier[1]).slice(0, Number(modifier[2]));
+    const commandSlice = /^~(\d+)(?:,(\d+))?$/.exec(name);
+    if (commandSlice) {
+      const raw = values.result || values.output || '';
+      const start = Number(commandSlice[1]);
+      const end = commandSlice[2] === undefined ? undefined : Number(commandSlice[2]);
+      return raw.slice(start, end);
+    }
     if (/^-?\d+$/.test(name)) {
       const index = Number(name);
       const position = index < 0 ? placeholders.length + index : index - 1;
       const placeholder = placeholders[position];
-      return placeholder ? values[placeholder.placeholder] ?? '' : '';
+      return placeholder ? formatPlaceholderValue(placeholder.placeholder, values[placeholder.placeholder]) : '';
     }
     if (name === 'succeeded') return values.succeeded || 'true';
     if (name.startsWith('$')) {
@@ -537,9 +586,11 @@ function replaceFormatTokens(format: string, moduleType: string, values: Record<
       const generalConstants = general.constants;
       const constants = Array.isArray(displayConstants) ? displayConstants : Array.isArray(generalConstants) ? generalConstants : [];
       const constantIndex = Number(name.slice(1));
-      return Number.isFinite(constantIndex) ? String(constants[constantIndex] ?? constants[Math.max(0, constantIndex - 1)] ?? '') : '';
+      if (!Number.isFinite(constantIndex)) return '';
+      const zeroBasedIndex = constantIndex > 0 ? constantIndex - 1 : 0;
+      return String(constants[zeroBasedIndex] ?? constants[constantIndex] ?? '');
     }
-    return values[name] ?? '';
+    return formatPlaceholderValue(name, values[name]);
   };
 
   // Fastfetch conditional blocks: {?value}...{?} and {/value}...{/}.
@@ -572,9 +623,16 @@ function replaceFormatTokens(format: string, moduleType: string, values: Record<
         }
         cursor += nested[0].length;
       }
-      if (closeStart < 0) { output += input.slice(index); break; }
+      if (closeStart < 0) {
+        const body = input.slice(bodyStart);
+        const conditionValue = valueFor(name).trim().toLowerCase();
+        const enabled = conditionValue !== '' && conditionValue !== '0' && conditionValue !== 'false' && conditionValue !== 'no';
+        if ((kind === '?' && enabled) || (kind === '/' && !enabled)) output += body;
+        break;
+      }
       const body = renderConditionals(input.slice(bodyStart, closeStart));
-      const enabled = Boolean(valueFor(name));
+      const conditionValue = valueFor(name).trim().toLowerCase();
+      const enabled = conditionValue !== '' && conditionValue !== '0' && conditionValue !== 'false' && conditionValue !== 'no';
       if ((kind === '?' && enabled) || (kind === '/' && !enabled)) output += body;
       index = cursor;
     }
@@ -633,7 +691,16 @@ function styledSegments(value: string, defaults: PreviewSegment): PreviewSegment
       } else if ((code === 38 || code === 48) && codes[codeIndex + 1] === 5) {
         const palette = ['#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0', '#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'];
         const paletteIndex = codes[codeIndex + 2];
-        const value = paletteIndex < 16 ? palette[paletteIndex] : undefined;
+        const value = paletteIndex < 16 ? palette[paletteIndex] : paletteIndex >= 232
+          ? `#${(8 + (paletteIndex - 232) * 10).toString(16).padStart(2, '0').repeat(3)}`
+          : (() => {
+            const cube = paletteIndex - 16;
+            const channel = (part: number) => part === 0 ? 0 : 55 + part * 40;
+            const red = Math.floor(cube / 36);
+            const green = Math.floor((cube % 36) / 6);
+            const blue = cube % 6;
+            return `#${[channel(red), channel(green), channel(blue)].map((part) => part.toString(16).padStart(2, '0')).join('')}`;
+          })();
         if (value) { if (code === 38) current.color = value; else current.background = value; }
         codeIndex += 2;
       }
@@ -647,6 +714,7 @@ function styledSegments(value: string, defaults: PreviewSegment): PreviewSegment
 function ansiCodeForColor(color: string): string {
   const named: Record<string, string> = { black: '30', red: '31', green: '32', yellow: '33', blue: '34', magenta: '35', cyan: '36', white: '37', default: '39' };
   if (/^\d+(;\d+)*$/.test(color)) return color;
+  if (/^@\d+$/.test(color)) return `38;5;${color.slice(1)}`;
   if (color.startsWith('#') && /^#[0-9a-f]{6}$/i.test(color)) {
     return `38;2;${parseInt(color.slice(1, 3), 16)};${parseInt(color.slice(3, 5), 16)};${parseInt(color.slice(5, 7), 16)}`;
   }
@@ -665,11 +733,13 @@ function ansiCodeForColor(color: string): string {
   return [...prefixes, brightCode].join(';');
 }
 
-function renderFormat(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, general: Record<string, unknown>, diagnostics: PreviewDiagnostic[], moduleId: string, baseColor: string): { text: string; segments: PreviewSegment[] } {
+function renderFormat(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, general: Record<string, unknown>, diagnostics: PreviewDiagnostic[], moduleId: string, baseColor: string, preserveWhitespace = false): { text: string; segments: PreviewSegment[] } {
   const resolved = replaceFormatTokens(format, moduleType, values, display, general, diagnostics, moduleId);
   if (display.pipe === true) {
-    const text = trimRendered(stripTerminalControls(resolved.replace(/\{#[^}]*\}/g, '')));
-    return { text, segments: text ? [{ text, color: 'default' }] : [] };
+    const rawText = resolved.replace(/\{#[^}]*\}/g, '');
+    const cleanText = stripTerminalControls(rawText);
+    const text = preserveWhitespace ? cleanText : trimRendered(cleanText);
+    return { text, segments: rawText ? [{ text: rawText, color: 'default' }] : [] };
   }
   const colorized = resolved.replace(/\{#([^}]*)\}/g, (_match, color: string) => {
     const namedColor = color === 'keys' || color === 'title' || color === 'output' || color === 'separator'
@@ -677,7 +747,56 @@ function renderFormat(format: string, moduleType: string, values: Record<string,
       : color;
     return `\x1b[${namedColor === '' ? '0' : ansiCodeForColor(namedColor)}m`;
   });
-  return { text: trimRendered(stripTerminalControls(resolved.replace(/\{#[^}]*\}/g, ''))), segments: styledSegments(colorized, { text: '', color: baseColor }) };
+  const cleanText = stripTerminalControls(resolved.replace(/\{#[^}]*\}/g, ''));
+  return { text: preserveWhitespace ? cleanText : trimRendered(cleanText), segments: styledSegments(colorized, { text: '', color: baseColor }) };
+}
+
+function renderModuleKey(
+  rawKey: string,
+  moduleConfig: ModuleConfig,
+  moduleType: string,
+  values: Record<string, string>,
+  display: DisplayConfig,
+  general: Record<string, unknown>,
+  diagnostics: PreviewDiagnostic[],
+  keyColor: string,
+  keyType: string | undefined,
+  icon: string,
+  keyWidth: number,
+): { key: string; segments: PreviewSegment[]; hidden: boolean; separatorConsumed: boolean } {
+  const hidden = rawKey === ' ' || keyType === 'none';
+  if (hidden) return { key: '', segments: [], hidden: true, separatorConsumed: false };
+
+  // Fastfetch allows the key itself to be a format string. This is how the
+  // pinned examples draw their table borders and use {$n}/{#color} tokens.
+  const formattedKey = moduleConfig.key !== undefined && (/\{[^}]+\}/.test(rawKey) || rawKey.includes('\x1b'));
+  if (formattedKey) {
+    const rendered = renderFormat(rawKey, moduleType, { ...values, icon }, display, general, diagnostics, moduleConfig.id, keyColor, true);
+    const hasCursorLayout = rawKey.includes('\x1b') || /\{\$\d+\}/.test(rawKey);
+    const rawTrailingWhitespace = hasCursorLayout ? '' : rawKey.match(/[ \t]+$/)?.[0] || '';
+    const visibleKey = `${rendered.text}${rawTrailingWhitespace}`;
+    const structuralKey = rawKey.replace(/\{#[^}]*\}/g, '');
+    const hasTableBoundary = /[\u2502\u2551|]\s*(?:\{\$\d+\})?\s*$/.test(structuralKey);
+    const simpleFormattedKey = !hasCursorLayout && !hasTableBoundary;
+    if (simpleFormattedKey && keyWidth > 0 && !/[ \t]$/.test(visibleKey)) {
+      const paddingLeft = Number(display.key?.paddingLeft || 0);
+      const effectiveKeyWidth = Math.max(0, keyWidth - 1);
+      const paddedKey = `${' '.repeat(paddingLeft)}${visibleKey.padEnd(effectiveKeyWidth, ' ')}`;
+      const segments = [{ text: paddedKey, color: keyColor, bold: true }];
+      return { key: paddedKey, segments, hidden: false, separatorConsumed: false };
+    }
+    return { key: visibleKey, segments: rendered.segments, hidden: false, separatorConsumed: hasTableBoundary && (display.separator === '' || display.separator === '\u2551 ') };
+  }
+
+  const iconGap = keyType === 'both-0' ? '' : keyType === 'both-2' ? '  ' : keyType === 'both-3' ? '   ' : keyType === 'both-4' ? '    ' : ' ';
+  const visibleKey = keyType === 'icon' ? icon : keyType?.startsWith('both') || keyType === 'both' ? `${icon}${iconGap}${rawKey}` : rawKey;
+  const paddingLeft = Number(display.key?.paddingLeft || 0);
+  const isBothKey = keyType === 'both' || keyType?.startsWith('both-');
+  const effectiveKeyWidth = keyWidth > 0 ? Math.max(0, keyWidth - 1 - (isBothKey ? paddingLeft : 0)) : 0;
+  const separatorConsumed = effectiveKeyWidth > 0 && (display.separator === undefined || display.separator === ': ');
+  const separatorPrefix = separatorConsumed && visibleKey.length < effectiveKeyWidth - 1 ? ':' : '';
+  const paddedKey = `${' '.repeat(paddingLeft)}${effectiveKeyWidth > 0 ? `${visibleKey}${separatorPrefix}`.padEnd(effectiveKeyWidth, ' ') : visibleKey}`;
+  return { key: paddedKey, segments: [{ text: paddedKey, color: keyColor, bold: true }], hidden: false, separatorConsumed };
 }
 
 function segmentAnsi(segment: PreviewSegment): string {
@@ -695,7 +814,8 @@ function linesToTerminalStream(lines: PreviewLine[]): string {
   return lines.map((line) => {
     if (line.kind === 'break') return '';
     if (line.kind === 'colors') {
-      return (line.colorBlocks || []).map((block) => {
+      const prefix = line.segments.map((segment) => `${segmentAnsi(segment)}${segment.text}`).join('');
+      return prefix + (line.colorBlocks || []).map((block) => {
         const rgb = /^#([0-9a-f]{6})$/i.exec(block.background);
         return `${rgb ? `\x1b[48;2;${parseInt(rgb[1].slice(0, 2), 16)};${parseInt(rgb[1].slice(2, 4), 16)};${parseInt(rgb[1].slice(4, 6), 16)}m` : ''}${block.text}\x1b[0m`;
       }).join('');
@@ -731,12 +851,35 @@ export function buildPreviewModel(
   const outputColor = display.pipe === true ? 'default' : displayColor(display.color, 'output', 'default');
   const separatorColor = display.pipe === true ? 'default' : displayColor(display.color, 'separator', outputColor);
   const separator = display.separator ?? ': ';
+  const separatorForKey = (separatorConsumed: boolean, hidden: boolean): string => {
+    if (hidden) return '';
+    if (!separatorConsumed) {
+      if (separator === '\u258c') return '\u258c  ';
+      if (separator === '\u2502 ' && globalKeyWidth > 0) return `${separator}\x1b[${globalKeyWidth}G`;
+      return separator;
+    }
+    if (separator === ': ') return '';
+    return separator.endsWith(' ') ? ' ' : '';
+  };
   const globalKeyWidth = display.key?.width ?? display.keyWidth ?? 0;
   const lines: PreviewLine[] = [];
+  const moduleOccurrences: Record<string, number> = {};
+  const captureOccurrences: Record<string, number> = {};
+  const moduleCounts = modules.reduce<Record<string, number>>((counts, module) => {
+    const type = normalizeType(module.type);
+    counts[type] = (counts[type] || 0) + 1;
+    return counts;
+  }, {});
 
   for (const moduleConfig of modules) {
     const type = normalizeType(moduleConfig.type);
+    const occurrence = moduleOccurrences[type] || 0;
+    moduleOccurrences[type] = occurrence + 1;
     if (!evaluateConditions(moduleConfig, profile)) continue;
+    const captureOccurrence = type === 'command' || type === 'file'
+      ? (captureOccurrences[type] || 0)
+      : occurrence;
+    if (type === 'command' || type === 'file') captureOccurrences[type] = captureOccurrence + 1;
     const values = getModuleValues(type, profile, display);
     if (type === 'break' || type === 'logo') {
       lines.push({ id: moduleConfig.id, kind: 'break', moduleType: type, segments: [] });
@@ -744,23 +887,43 @@ export function buildPreviewModel(
     }
     if (type === 'colors') {
       const block = (moduleConfig.block || {}) as Record<string, unknown>;
-      const range = Array.isArray(block.range) && block.range.length >= 2 ? [Number(block.range[0]), Number(block.range[1])] : [0, 15];
-      const width = typeof block.width === 'number' && block.width > 0 ? block.width : 3;
+      const symbolName = String(moduleConfig.symbol || 'background');
+      const range = Array.isArray(block.range) && block.range.length >= 2 ? [Number(block.range[0]), Number(block.range[1])] : symbolName === 'circle' || symbolName === 'dot' ? [0, 7] : [0, 15];
+      const width = typeof block.width === 'number' && block.width > 0 ? block.width : symbolName === 'circle' || symbolName === 'dot' ? 1 : 3;
       const backgrounds = ['#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0', '#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'];
       const symbol = moduleConfig.symbol === 'square' ? '■' : moduleConfig.symbol === 'dot' ? '•' : ' ';
       const colorBlocks = Array.from({ length: Math.max(0, range[1] - range[0] + 1) }, (_, index) => {
         const colorIndex = range[0] + index;
         const symbolMap: Record<string, string> = { square: '\u25a0', dot: '\u2022', circle: '\u25cf', diamond: '\u25c6', triangle: '\u25b2', star: '\u2605', background: ' ' };
         const actualSymbol = symbolMap[String(moduleConfig.symbol || 'background')] || symbol || ' ';
-        return { index: colorIndex, background: display.pipe === true ? 'transparent' : backgrounds[colorIndex] || '#000000', text: actualSymbol.repeat(width) };
+        return { index: colorIndex, background: display.pipe === true ? 'transparent' : backgrounds[colorIndex] || '#000000', text: `${actualSymbol.repeat(width)}${symbolName === 'circle' || symbolName === 'dot' ? ' ' : ''}` };
       });
-      lines.push({ id: moduleConfig.id, kind: 'colors', moduleType: type, segments: [], colorBlocks });
+      const colorPrefix = moduleConfig.key !== undefined
+        ? renderModuleKey(moduleConfig.key, moduleConfig, type, values, display, general, diagnostics, moduleColor(moduleConfig.keyColor, keyColor), display.key?.type, moduleIcon(type, values), globalKeyWidth)
+        : { key: '', segments: [], hidden: true, separatorConsumed: false };
+      const colorPadding = moduleConfig.key === undefined && Number(moduleConfig.paddingLeft || 0) > 0 ? [{ text: ' '.repeat(Number(moduleConfig.paddingLeft)), color: outputColor }] : [];
+      const colorSeparator = separatorForKey(colorPrefix.separatorConsumed, colorPrefix.hidden);
+      lines.push({ id: moduleConfig.id, kind: 'colors', moduleType: type, key: colorPrefix.key, segments: [...colorPadding, ...colorPrefix.segments, ...(colorSeparator ? [{ text: colorSeparator, color: separatorColor }] : [])], colorBlocks });
       continue;
     }
     if (type === 'title') {
-      const titleValues = { 'user-name': 'user', 'host-name': 'hostname', 'user-name-colored': 'user', 'at-symbol-colored': '@', 'host-name-colored': 'hostname' };
+      const titleValues = {
+        ...values,
+        'user-name': values['user-name'] || profile.username || 'user',
+        'host-name': values['host-name'] || profile.hostname || 'hostname',
+        'user-name-colored': values['user-name-colored'] || values['user-name'] || profile.username || 'user',
+        'at-symbol-colored': values['at-symbol-colored'] || '@',
+        'host-name-colored': values['host-name-colored'] || values['host-name'] || profile.hostname || 'hostname',
+      };
       const rendered = renderFormat(moduleConfig.format || '{user-name}@{host-name}', type, { ...titleValues, ...values }, display, general, diagnostics, moduleConfig.id, titleColor);
-      lines.push({ id: moduleConfig.id, kind: 'title', moduleType: type, output: rendered.text || 'user@hostname', segments: rendered.segments, outputColor: titleColor });
+      if (moduleConfig.key !== undefined) {
+        const titleKeyColor = moduleColor(moduleConfig.keyColor, keyColor);
+        const keyModel = renderModuleKey(moduleConfig.key, moduleConfig, type, titleValues, display, general, diagnostics, titleKeyColor, display.key?.type, moduleIcon(type, titleValues), globalKeyWidth);
+        const titleSeparator = separatorForKey(keyModel.separatorConsumed, keyModel.hidden);
+        lines.push({ id: moduleConfig.id, kind: 'title', moduleType: type, key: keyModel.key, output: rendered.text, segments: [...keyModel.segments, ...(titleSeparator ? [{ text: titleSeparator, color: separatorColor }] : []), ...rendered.segments], keyColor: titleKeyColor, outputColor: titleColor, separatorColor });
+      } else {
+        lines.push({ id: moduleConfig.id, kind: 'title', moduleType: type, output: rendered.text || 'user@hostname', segments: rendered.segments, outputColor: titleColor });
+      }
       continue;
     }
     if (type === 'separator') {
@@ -777,8 +940,15 @@ export function buildPreviewModel(
     }
     if (type === 'custom' || type === 'text') {
       const customOutputColor = moduleColor(moduleConfig.outputColor, outputColor);
-      const rendered = renderFormat(moduleConfig.format || moduleConfig.key || 'Custom Text', type, values, display, general, diagnostics, moduleConfig.id, customOutputColor);
-      lines.push({ id: moduleConfig.id, kind: 'custom', moduleType: type, output: rendered.text, segments: rendered.segments, outputColor: customOutputColor });
+      const rendered = renderFormat(moduleConfig.format || (moduleConfig.key === undefined ? 'Custom Text' : ''), type, values, display, general, diagnostics, moduleConfig.id, customOutputColor);
+      if (moduleConfig.key !== undefined) {
+        const customKeyColor = moduleColor(moduleConfig.keyColor, keyColor);
+        const keyModel = renderModuleKey(moduleConfig.key, moduleConfig, type, values, display, general, diagnostics, customKeyColor, display.key?.type, moduleIcon(type, values), globalKeyWidth);
+        const customSeparator = separatorForKey(keyModel.separatorConsumed, keyModel.hidden);
+        lines.push({ id: moduleConfig.id, kind: 'custom', moduleType: type, key: keyModel.key, output: rendered.text, segments: [...keyModel.segments, ...(customSeparator ? [{ text: customSeparator, color: separatorColor }] : []), ...rendered.segments], keyColor: customKeyColor, outputColor: customOutputColor, separatorColor });
+      } else {
+        lines.push({ id: moduleConfig.id, kind: 'custom', moduleType: type, output: rendered.text, segments: rendered.segments, outputColor: customOutputColor });
+      }
       continue;
     }
     if (type === 'command' || type === 'file') {
@@ -794,10 +964,44 @@ export function buildPreviewModel(
     }
     const keyType = display.key?.type;
     const moduleKeyWidth = typeof moduleConfig.keyWidth === 'number' ? moduleConfig.keyWidth : globalKeyWidth;
-    const icon = String(moduleConfig.keyIcon || KEY_ICONS[type] || '◆');
-    const iconGap = keyType === 'both-0' ? '' : keyType === 'both-2' ? '  ' : keyType === 'both-3' ? '   ' : keyType === 'both-4' ? '    ' : ' ';
+    const icon = String(moduleConfig.keyIcon || moduleIcon(type, values));
     const capturedValueSets = getModuleValueSets(type, profile, display);
-    const valueSets = !hasExplicitFormat && type === 'codec' ? capturedValueSets.slice(0, 2) : capturedValueSets;
+    const groupedValueSets = (moduleCounts[type] || 0) > 1 && capturedValueSets.length % moduleCounts[type] === 0 && type !== 'disk'
+      ? capturedValueSets.slice(occurrence * (capturedValueSets.length / moduleCounts[type]), (occurrence + 1) * (capturedValueSets.length / moduleCounts[type]))
+      : type === 'disk' && !moduleConfig.folders
+        ? capturedValueSets.filter((valueSet, index, all) => all.findIndex((candidate) => candidate.mountpoint === valueSet.mountpoint) === index)
+        : capturedValueSets;
+    const occurrenceValueSets = type === 'localip' && Array.isArray(profile.succeeded?.[type]) && profile.succeeded?.[type]?.[occurrence] === false
+      ? []
+      : type === 'command' || type === 'file'
+      ? (() => {
+        const succeeded = profile.succeeded?.[type];
+        if (Array.isArray(succeeded)) {
+          if (succeeded[captureOccurrence] === false || succeeded[captureOccurrence] === undefined) return [];
+          const successfulIndex = succeeded.slice(0, captureOccurrence).filter(Boolean).length;
+          return capturedValueSets.slice(successfulIndex, successfulIndex + 1);
+        }
+        return capturedValueSets.slice(0, 1);
+      })()
+      : groupedValueSets;
+    const filteredValueSets = type === 'localip' && moduleConfig.showIpv4 === true
+      ? occurrenceValueSets.filter((valueSet) => Boolean(valueSet.ipv4))
+      : type === 'localip' && moduleConfig.showIpv6 === true
+        ? occurrenceValueSets.filter((valueSet) => Boolean(valueSet.ipv6))
+        : type === 'disk' && moduleConfig.folders
+          ? (() => {
+            const requested = String(moduleConfig.folders);
+            const cwd = getModuleValues('title', profile, display).cwd || '';
+            const rootDrive = profile.id === 'windows' ? `${/^([A-Za-z]):/.exec(cwd)?.[1] || 'C'}:\\` : '/';
+            const exactMatching = occurrenceValueSets.filter((valueSet) => String(valueSet.mountpoint || '') === requested || (requested === '/' && String(valueSet.mountpoint || '') === rootDrive));
+            const fallbackRoot = requested === '/' && exactMatching.length === 0
+              ? occurrenceValueSets.find((valueSet) => /^[A-Za-z]:\\$/.test(String(valueSet.mountpoint || '')))
+              : undefined;
+            const matching = fallbackRoot ? [fallbackRoot] : exactMatching;
+            return matching.filter((valueSet, index, all) => all.findIndex((candidate) => candidate.mountpoint === valueSet.mountpoint) === index);
+          })()
+          : occurrenceValueSets;
+    const valueSets = filteredValueSets;
   if (type === 'loadavg' && !moduleConfig.compact && valueSets.length > 0) {
       const load = valueSets[0];
       ['1', '5', '15'].forEach((minutes, index) => {
@@ -821,15 +1025,17 @@ export function buildPreviewModel(
         return output;
       }).join(', ');
       const lineKey = moduleConfig.key ?? key;
-      const lineHiddenKey = lineKey === ' ' || keyType === 'none';
-      const lineVisibleKey = keyType === 'icon' ? icon : keyType?.startsWith('both') || keyType === 'both' ? `${icon}${iconGap}${lineKey}` : lineKey;
-      const linePaddedKey = lineHiddenKey ? '' : `${' '.repeat(display.key?.paddingLeft || 0)}${moduleKeyWidth > 0 ? lineVisibleKey.padEnd(moduleKeyWidth, ' ') : lineVisibleKey}`;
       const lineKeyColor = moduleColor(moduleConfig.keyColor, keyColor);
       const lineOutputColor = moduleColor(moduleConfig.outputColor, outputColor);
-      lines.push({ id: `${moduleConfig.id}-0`, kind: 'module', moduleType: type, key: linePaddedKey, separator, output: compactOutput, segments: [...(lineHiddenKey ? [] : [{ text: linePaddedKey, color: lineKeyColor, bold: true }]), ...(lineHiddenKey ? [] : [{ text: separator, color: separatorColor }]), { text: compactOutput, color: lineOutputColor }], keyColor: lineKeyColor, outputColor: lineOutputColor, separatorColor, keyWidth: moduleKeyWidth });
+      const lineKeyModel = renderModuleKey(lineKey, moduleConfig, type, { ...values, ...(valueSets[0] || {}) }, display, general, diagnostics, lineKeyColor, keyType, icon, moduleKeyWidth);
+      const compactSeparator = separatorForKey(lineKeyModel.separatorConsumed, lineKeyModel.hidden);
+      lines.push({ id: `${moduleConfig.id}-0`, kind: 'module', moduleType: type, key: lineKeyModel.key, separator, output: compactOutput, segments: [...lineKeyModel.segments, ...(compactSeparator ? [{ text: compactSeparator, color: separatorColor }] : []), { text: compactOutput, color: lineOutputColor }], keyColor: lineKeyColor, outputColor: lineOutputColor, separatorColor, keyWidth: moduleKeyWidth });
       continue;
     }
-    valueSets.forEach((valueSet, resultIndex, valueSets) => {
+    const renderedValueSets = type === 'codec' && moduleConfig.splitGPU !== true && valueSets.length > 2
+      ? valueSets.filter((valueSet) => valueSet.gpu === valueSets[0]?.gpu)
+      : valueSets;
+    renderedValueSets.forEach((valueSet, resultIndex, renderedValueSets) => {
       const lineKey = moduleConfig.key ?? (
         type === 'gpu' && valueSets.length > 1 ? `${LABELS[type] || moduleConfig.type} ${resultIndex + 1}` :
         type === 'disk' && valueSet.mountpoint ? `${LABELS[type] || moduleConfig.type} (${valueSet.mountpoint})` :
@@ -838,27 +1044,32 @@ export function buildPreviewModel(
         ['netio', 'diskio', 'physicaldisk'].includes(type) && valueSet.name ? `${LABELS[type] || moduleConfig.type} (${valueSet.name})` :
         type === 'bluetoothradio' && valueSet.name ? `${LABELS[type] || moduleConfig.type} (${valueSet.name})` :
         type === 'bios' && valueSet.type ? `${LABELS[type] || moduleConfig.type} (${valueSet.type.toLowerCase() === 'bios' ? 'Legacy' : valueSet.type})` :
-        type === 'codec' && valueSet.direction ? `${LABELS[type] || moduleConfig.type} (${valueSet.direction})` :
+        type === 'codec' && valueSet.direction ? `${LABELS[type] || moduleConfig.type} (${valueSet.direction}${moduleConfig.splitGPU === true && valueSet.gpu ? ` - ${valueSet.gpu}` : ''})` :
+        type === 'swap' && moduleConfig.separate === true && valueSet.name ? `${LABELS[type] || moduleConfig.type} (${valueSet.name})` :
         type === 'cpucache' && valueSet.level ? `${LABELS[type] || moduleConfig.type} (${valueSet.level})` :
         type === 'brightness' && valueSet.name ? `${LABELS[type] || moduleConfig.type} (${valueSet.name})` :
         ['battery', 'bluetooth', 'bluetoothradio', 'gamepad', 'keyboard', 'mouse', 'netio', 'diskio', 'physicaldisk', 'physicalmemory', 'poweradapter', 'sound', 'users', 'wifi'].includes(type) && valueSets.length > 1 ? `${LABELS[type] || moduleConfig.type} ${resultIndex + 1}` :
         key
       );
-      const lineHiddenKey = lineKey === ' ' || keyType === 'none';
-      const lineVisibleKey = keyType === 'icon' ? icon : keyType?.startsWith('both') || keyType === 'both' ? `${icon}${iconGap}${lineKey}` : lineKey;
-      const linePaddedKey = lineHiddenKey ? '' : `${' '.repeat(display.key?.paddingLeft || 0)}${moduleKeyWidth > 0 ? lineVisibleKey.padEnd(moduleKeyWidth, ' ') : lineVisibleKey}`;
       const lineKeyColor = moduleColor(moduleConfig.keyColor, keyColor);
       const lineOutputColor = moduleColor(moduleConfig.outputColor, outputColor);
-      const lineKeySegments = lineHiddenKey ? [] : [{ text: linePaddedKey, color: lineKeyColor, bold: true }];
-      const lineSeparatorSegments = lineHiddenKey ? [] : [{ text: separator, color: separatorColor }];
-      const nativeDefault = !hasExplicitFormat ? nativeDefaultOutput(type, valueSet, moduleConfig, display, resultIndex, valueSets.length) : undefined;
+      const lineKeyModel = renderModuleKey(lineKey, moduleConfig, type, { ...values, ...valueSet }, display, general, diagnostics, lineKeyColor, keyType, icon, moduleKeyWidth);
+      const lineSeparator = separatorForKey(lineKeyModel.separatorConsumed, lineKeyModel.hidden);
+      const lineSeparatorSegments = lineSeparator ? [{ text: lineSeparator, color: separatorColor }] : [];
+      const suppressEmptyPackages = type === 'packages' && valueSet.all === '0' && (moduleConfig.combined === true || moduleConfig.format?.includes('{all}'));
+      if (suppressEmptyPackages) return;
+      const nativeDefault = !hasExplicitFormat ? nativeDefaultOutput(type, valueSet, moduleConfig, display, resultIndex, renderedValueSets.length) : undefined;
       if (nativeDefault === null) return;
       const rendered = nativeDefault !== undefined
         ? { text: trimRendered(nativeDefault), segments: [{ text: trimRendered(nativeDefault), color: lineOutputColor }] }
-        : renderFormat(format, type, valueSet, display, general, diagnostics, moduleConfig.id, lineOutputColor);
+        : renderFormat(format, type, {
+          ...valueSet,
+          ...(format.includes('{percentage-bar}') ? { 'percentage-bar': formatPercentBar(valueSet.percentage, percentSettings(moduleConfig, display)) } : {}),
+          ...(format.includes('{size-percentage-bar}') ? { 'size-percentage-bar': formatPercentBar(valueSet['size-percentage'], percentSettings(moduleConfig, display)) } : {}),
+        }, display, general, diagnostics, moduleConfig.id, lineOutputColor);
       lines.push({
-        id: `${moduleConfig.id}-${resultIndex}`, kind: 'module', moduleType: type, key: linePaddedKey, separator, output: rendered.text,
-        segments: [...lineKeySegments, ...lineSeparatorSegments, ...rendered.segments], keyColor: lineKeyColor,
+        id: `${moduleConfig.id}-${resultIndex}`, kind: 'module', moduleType: type, key: lineKeyModel.key, separator, output: rendered.text,
+        segments: [...lineKeyModel.segments, ...lineSeparatorSegments, ...rendered.segments], keyColor: lineKeyColor,
         outputColor: lineOutputColor, separatorColor, keyWidth: moduleKeyWidth,
       });
     });

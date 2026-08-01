@@ -61,6 +61,7 @@ export function renderTerminalStream(stream: string, columns = 120, rows = 200):
   const cells = Array.from({ length: height }, () => Array.from({ length: width }, () => blankCell()));
   let x = 0;
   let y = 0;
+  let savedCursor = { x: 0, y: 0 };
   let style: TerminalStyle = { ...DEFAULT_STYLE };
   let wrapPending = false;
 
@@ -146,6 +147,8 @@ export function renderTerminalStream(stream: string, columns = 120, rows = 200):
       else if (final === 'G' || final === '`') x = Math.max(0, amount - 1);
       else if (final === 'd') y = Math.max(0, amount - 1);
       else if (final === 'H' || final === 'f') { y = Math.max(0, (params[0] || 1) - 1); x = Math.max(0, (params[1] || 1) - 1); }
+      else if (final === 's') savedCursor = { x, y };
+      else if (final === 'u') { x = savedCursor.x; y = savedCursor.y; }
       else if (final === 'J') eraseDisplay(params[0] || 0);
       else if (final === 'K') eraseLine(params[0] || 0);
       else if (final === 'P') {
@@ -166,6 +169,18 @@ export function renderTerminalStream(stream: string, columns = 120, rows = 200):
     const oscMatch = osc.exec(stream);
     if (oscMatch) { index = osc.lastIndex; continue; }
     const character = stream[index];
+    if (character === '\x1b' && stream[index + 1] === '7') {
+      savedCursor = { x, y };
+      index += 2;
+      continue;
+    }
+    if (character === '\x1b' && stream[index + 1] === '8') {
+      x = savedCursor.x;
+      y = savedCursor.y;
+      clampCursor();
+      index += 2;
+      continue;
+    }
     if (character === '\x1b') { index += 1; continue; }
     if (character === '\r') { x = 0; wrapPending = false; index += 1; continue; }
     if (character === '\n') { moveRow(1); x = 0; wrapPending = false; index += 1; continue; }

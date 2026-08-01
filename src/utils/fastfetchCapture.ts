@@ -80,6 +80,13 @@ const formatShortTime = (value: string): string => {
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`;
 };
 
+const isoWeek = (date: Date): number => {
+  const thursday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7));
+  const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+  return Math.ceil((((thursday.getTime() - firstThursday.getTime()) / 86400000) + 1) / 7);
+};
+
 const flattenScalars = (value: unknown, prefix = '', output: Record<string, string> = {}): Record<string, string> => {
   if (value === null || value === undefined) {
     if (prefix) output[prefix] = '';
@@ -213,12 +220,17 @@ const scalarValues = (value: unknown, moduleType = ''): Record<string, string> =
   }
 
   if (type === 'font') copyAlias(values, 'combined', 'display');
+  if (type === 'font' && value && typeof value === 'object' && !Array.isArray(value)) {
+    const fonts = (value as Record<string, unknown>).fonts;
+    if (Array.isArray(fonts)) fonts.forEach((font, index) => { values[`font${index + 1}`] = String(font); });
+  }
   if (type === 'terminalfont') copyAlias(values, 'combined', 'font-pretty', 'pretty', 'display');
   if (type === 'camera') copyAlias(values, 'colorspace', 'colorspace', 'color-space');
   if (type === 'title') {
     copyAlias(values, 'user-name', 'user-name', 'user-name');
     copyAlias(values, 'host-name', 'host-name', 'host-name');
     copyAlias(values, 'full-user-name', 'full-user-name');
+    if (values.cwd && values.cwd.length > 1) values.cwd = values.cwd.replace(/[\\/]$/, '');
   }
   if (type === 'localip') copyAlias(values, 'ifname', 'name');
   if (type === 'localip') copyAlias(values, 'is-default-route', 'default-route-ipv4', 'default-route-ipv6', 'default-route');
@@ -231,10 +243,23 @@ const scalarValues = (value: unknown, moduleType = ''): Record<string, string> =
     const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})/.exec(raw);
     if (match) {
       const [, year, month, day, hour, minute, second] = match;
+      const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+      const unpadded = (part: string) => String(Number(part));
+      const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const weekdayShortNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const offsetMatch = /([+-])(\d{2}):?(\d{2})$/.exec(raw);
+      const offset = offsetMatch ? `${offsetMatch[1]}${offsetMatch[2]}${offsetMatch[3]}` : '+0000';
       Object.assign(values, {
         result: `${year}-${month}-${day} ${hour}:${minute}:${second}`,
-        year, 'year-short': year.slice(-2), month, 'month-pretty': month, 'day-in-month': day, 'day-pretty': day,
-        hour, 'hour-pretty': hour, minute, 'minute-pretty': minute, second, 'second-pretty': second,
+        year, 'year-short': year.slice(-2), month: unpadded(month), 'month-pretty': month,
+        'month-name': date.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' }),
+        'month-name-short': date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }),
+        week: String(isoWeek(date)), weekday: weekdayNames[date.getUTCDay()], 'weekday-short': weekdayShortNames[date.getUTCDay()],
+        'day-in-month': unpadded(day), 'day-pretty': day, 'day-in-year': String(Math.floor((date.getTime() - Date.UTC(date.getUTCFullYear(), 0, 1)) / 86400000) + 1),
+        'day-in-week': String(date.getUTCDay() || 7), hour: unpadded(hour), 'hour-pretty': hour,
+        'hour-12': String(Number(hour) % 12 || 12), 'hour-12-pretty': String(Number(hour) % 12 || 12).padStart(2, '0'),
+        minute: unpadded(minute), 'minute-pretty': minute, second: unpadded(second), 'second-pretty': second,
+        'offset-from-utc': offset, 'timezone-name': offset === '+0800' ? 'China Standard Time' : offset,
       });
     }
   }
@@ -284,7 +309,36 @@ const scalarValues = (value: unknown, moduleType = ''): Record<string, string> =
       const raw = values[`memory-${field}`];
       if (raw && /^\d+(?:\.\d+)?$/.test(raw)) values[field] = formatBytes(Number(raw));
     }
+    const dedicatedUsed = Number(values['dedicated-used-bytes'] || values['memory-dedicated-used'] || values['dedicated-used']);
+    const dedicatedTotal = Number(values['dedicated-total-bytes'] || values['memory-dedicated-total'] || values['dedicated-total']);
+    if (Number.isFinite(dedicatedUsed) && Number.isFinite(dedicatedTotal) && dedicatedTotal > 0) {
+      values['dedicated-percentage-num'] = String(Math.round((dedicatedUsed / dedicatedTotal) * 100));
+    }
     copyAlias(values, 'type', 'gpu-type');
+  }
+
+  if (['cpu', 'gpu', 'physicaldisk'].includes(type) && values.temperature && /^\d+(?:\.\d+)?$/.test(values.temperature)) {
+    values.temperature = `${Number(values.temperature).toFixed(1)}°C`;
+  }
+
+  if (type === 'display' || type === 'monitor') {
+    const width = Number(values.width);
+    const height = Number(values.height);
+    const physicalWidth = Number(values['physical-width']);
+    const physicalHeight = Number(values['physical-height']);
+    if (!values.ppi && Number.isFinite(width) && Number.isFinite(height) && Number.isFinite(physicalWidth) && Number.isFinite(physicalHeight) && physicalWidth > 0 && physicalHeight > 0) {
+      const inches = Math.sqrt(physicalWidth ** 2 + physicalHeight ** 2) / 25.4;
+      values.inch = inches.toFixed(type === 'monitor' ? 2 : 1);
+      values.ppi = String(Math.round(Math.sqrt(width ** 2 + height ** 2) / inches));
+    }
+  }
+
+  for (const field of ['create-time', 'boot-time', 'install-date']) {
+    if (values[field] && /T\d{2}:\d{2}:\d{2}/.test(values[field])) values[field] = formatShortTime(values[field]);
+  }
+  if (type === 'disk' && values['create-time']) {
+    const created = Date.parse(values['create-time'].replace(' ', 'T'));
+    if (Number.isFinite(created)) values.days = String(Math.max(0, Math.floor((Date.now() - created) / 86400000)));
   }
 
   if (type === 'physicalmemory') {
@@ -311,6 +365,7 @@ const firstCaptureValue = (value: Record<string, string> | Record<string, string
 
 const captureValues = (value: unknown, moduleType = ''): Record<string, string> | Record<string, string>[] => {
   const type = normalizeKey(moduleType);
+  if (Array.isArray(value) && value.length === 0) return {};
   if (type === 'cpucache' && value && typeof value === 'object' && !Array.isArray(value)) {
     const cache = value as Record<string, unknown>;
     const result: Record<string, string>[] = [];
