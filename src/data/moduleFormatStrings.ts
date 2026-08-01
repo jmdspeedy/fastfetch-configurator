@@ -1,7 +1,7 @@
 /**
  * Format string placeholder definitions for all fastfetch modules.
  * Extracted from the official JSON schema:
- * https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json
+ * https://github.com/fastfetch-cli/fastfetch/raw/2.66.0/doc/json_schema.json
  *
  * Each module maps to an array of placeholders that can be used in
  * format strings with `{placeholder}` syntax.
@@ -122,6 +122,13 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'result', description: 'Command result' },
   ],
 
+  Codec: [
+    { placeholder: 'gpu', description: 'GPU name' },
+    { placeholder: 'direction', description: 'Codec direction (Encoder / Decoder)' },
+    { placeholder: 'types', description: 'Supported codec types' },
+    { placeholder: 'platform-api', description: 'Platform API used' },
+  ],
+
   CPU: [
     { placeholder: 'name', description: 'Name' },
     { placeholder: 'vendor', description: 'Vendor' },
@@ -134,6 +141,9 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'core-types', description: 'Logical core count grouped by frequency' },
     { placeholder: 'packages', description: 'Processor package count' },
     { placeholder: 'march', description: 'x86-64 CPU microarchitecture' },
+    { placeholder: 'numa-nodes', description: 'NUMA node count' },
+    { placeholder: 'code-name', description: 'CPU code name' },
+    { placeholder: 'technology', description: 'CPU technology' },
   ],
 
   CPUCache: [
@@ -181,6 +191,7 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'offset-from-utc', description: 'Offset from UTC (ISO 8601)' },
     { placeholder: 'timezone-name', description: 'Timezone name or abbreviation' },
     { placeholder: 'day-pretty', description: 'Day in month with leading zero' },
+    { placeholder: 'am-pm', description: 'AM or PM' },
   ],
 
   DE: [
@@ -214,6 +225,7 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'preferred-width', description: 'Preferred width (px)' },
     { placeholder: 'preferred-height', description: 'Preferred height (px)' },
     { placeholder: 'preferred-refresh-rate', description: 'Preferred refresh rate (Hz)' },
+    { placeholder: 'dpi', description: 'DPI' },
   ],
 
   Disk: [
@@ -235,6 +247,14 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'mount-from', description: 'Mount from (device path)' },
     { placeholder: 'size-free', description: 'Size free' },
     { placeholder: 'size-available', description: 'Size available' },
+    { placeholder: 'days', description: 'Days after creation' },
+    { placeholder: 'hours', description: 'Hours after creation' },
+    { placeholder: 'minutes', description: 'Minutes after creation' },
+    { placeholder: 'seconds', description: 'Seconds after creation' },
+    { placeholder: 'milliseconds', description: 'Milliseconds after creation' },
+    { placeholder: 'years', description: 'Years integer after creation' },
+    { placeholder: 'days-of-year', description: 'Days of year after creation' },
+    { placeholder: 'years-fraction', description: 'Years fraction after creation' },
   ],
 
   DiskIO: [
@@ -296,6 +316,8 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'core-usage-num', description: 'Core usage percentage num' },
     { placeholder: 'core-usage-bar', description: 'Core usage percentage bar' },
     { placeholder: 'memory-type', description: 'Memory type (Windows only)' },
+    { placeholder: 'pcie-max-speed', description: 'PCIe maximum speed in gen and lanes' },
+    { placeholder: 'pcie-curr-speed', description: 'PCIe current speed in gen and lanes' },
   ],
 
   Host: [
@@ -367,6 +389,12 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'artist', description: 'Artist name' },
     { placeholder: 'album', description: 'Album name' },
     { placeholder: 'status', description: 'Status' },
+    { placeholder: 'progress', description: 'Progress in text' },
+    { placeholder: 'progress-num', description: 'Progress in percentage (number)' },
+    { placeholder: 'progress-bar', description: 'Progress in percentage (bar)' },
+    { placeholder: 'player-name', description: 'Player name' },
+    { placeholder: 'player-id', description: 'Player ID' },
+    { placeholder: 'url', description: 'URL' },
   ],
 
   Memory: [
@@ -441,24 +469,58 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
   ],
 
   Packages: [
+    { placeholder: 'am-system', description: 'Number of am-system packages' },
+    { placeholder: 'am-user', description: 'Number of am-user packages' },
+    { placeholder: 'appimage', description: 'Number of appimage packages' },
     { placeholder: 'all', description: 'Number of all packages' },
+    { placeholder: 'apk', description: 'Number of apk packages' },
+    { placeholder: 'brew-all', description: 'Total number of all brew packages' },
+    { placeholder: 'brew-cask', description: 'Number of brew-cask packages' },
+    { placeholder: 'brew', description: 'Number of brew packages' },
+    { placeholder: 'cards', description: 'Number of cards packages' },
+    { placeholder: 'choco', description: 'Number of choco packages' },
     { placeholder: 'pacman', description: 'Number of pacman packages' },
     { placeholder: 'dpkg', description: 'Number of dpkg packages' },
     { placeholder: 'rpm', description: 'Number of rpm packages' },
     { placeholder: 'emerge', description: 'Number of emerge packages' },
+    { placeholder: 'eopkg', description: 'Number of eopkg packages' },
     { placeholder: 'xbps', description: 'Number of xbps packages' },
+    { placeholder: 'flatpak-all', description: 'Total number of all flatpak app packages' },
     { placeholder: 'nix-system', description: 'Number of nix-system packages' },
     { placeholder: 'nix-user', description: 'Number of nix-user packages' },
-    { placeholder: 'apk', description: 'Number of apk packages' },
+    { placeholder: 'flatpak-system', description: 'Number of flatpak-system app packages' },
+    { placeholder: 'flatpak-user', description: 'Number of flatpak-user app packages' },
+    { placeholder: 'guix-all', description: 'Total number of all guix packages' },
+    { placeholder: 'guix-home', description: 'Number of guix-home packages' },
+    { placeholder: 'guix-system', description: 'Number of guix-system packages' },
+    { placeholder: 'guix-user', description: 'Number of guix-user packages' },
+    { placeholder: 'hpkg-all', description: 'Total number of all hpkg packages' },
+    { placeholder: 'hpkg-system', description: 'Number of hpkg-system packages' },
+    { placeholder: 'hpkg-user', description: 'Number of hpkg-user packages' },
+    { placeholder: 'install-release', description: 'Number of install-release packages' },
+    { placeholder: 'kiss', description: 'Number of kiss packages' },
+    { placeholder: 'linglong', description: 'Number of linglong packages' },
+    { placeholder: 'lpkg', description: 'Number of lpkg packages' },
+    { placeholder: 'lpkgbuild', description: 'Number of lpkgbuild packages' },
+    { placeholder: 'macports', description: 'Number of macports packages' },
+    { placeholder: 'mport', description: 'Number of mport packages' },
+    { placeholder: 'moss', description: 'Number of moss packages' },
+    { placeholder: 'nix-all', description: 'Total number of all nix packages' },
+    { placeholder: 'nix-default', description: 'Number of nix-default packages' },
+    { placeholder: 'opkg', description: 'Number of opkg packages' },
+    { placeholder: 'pacman-branch', description: 'Pacman branch on Manjaro' },
+    { placeholder: 'pacstall', description: 'Number of pacstall packages' },
+    { placeholder: 'paludis', description: 'Number of paludis packages' },
+    { placeholder: 'pisi', description: 'Number of pisi packages' },
     { placeholder: 'pkg', description: 'Number of pkg packages' },
-    { placeholder: 'flatpak-system', description: 'Number of flatpak-system packages' },
-    { placeholder: 'flatpak-user', description: 'Number of flatpak-user packages' },
+    { placeholder: 'pkgsrc', description: 'Number of pkgsrc packages' },
+    { placeholder: 'pkgtool', description: 'Number of pkgtool packages' },
+    { placeholder: 'porg', description: 'Number of porg packages' },
     { placeholder: 'snap', description: 'Number of snap packages' },
-    { placeholder: 'brew', description: 'Number of brew packages' },
-    { placeholder: 'brew-cask', description: 'Number of brew-cask packages' },
+    { placeholder: 'soar', description: 'Number of soar packages' },
+    { placeholder: 'sorcery', description: 'Number of sorcery packages' },
     { placeholder: 'scoop-user', description: 'Number of scoop-user packages' },
     { placeholder: 'scoop-global', description: 'Number of scoop-global packages' },
-    { placeholder: 'choco', description: 'Number of choco packages' },
     { placeholder: 'winget', description: 'Number of winget packages' },
   ],
 
@@ -487,6 +549,7 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'serial', description: 'Serial number' },
     { placeholder: 'part-number', description: 'Part number' },
     { placeholder: 'is-ecc-enabled', description: 'True if ECC enabled' },
+    { placeholder: 'is-installed', description: 'True if a memory module is installed in the slot' },
   ],
 
   Player: [
@@ -527,6 +590,7 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
 
   Sound: [
     { placeholder: 'is-main', description: 'Is main sound device' },
+    { placeholder: 'is-active', description: 'Is active sound device' },
     { placeholder: 'name', description: 'Device name' },
     { placeholder: 'volume-percentage', description: 'Volume (percentage num)' },
     { placeholder: 'identifier', description: 'Identifier' },
@@ -584,6 +648,9 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'at-symbol-colored', description: '@ symbol (colored)' },
     { placeholder: 'host-name-colored', description: 'Host name (colored)' },
     { placeholder: 'full-user-name', description: 'Full user name' },
+    { placeholder: 'user-id', description: 'UID (Unix) / SID (Windows)' },
+    { placeholder: 'pid', description: 'PID of current process' },
+    { placeholder: 'cwd', description: 'Current working directory with home replaced by ~' },
   ],
 
   Theme: [
@@ -619,6 +686,10 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
     { placeholder: 'hours', description: 'Hours after login' },
     { placeholder: 'minutes', description: 'Minutes after login' },
     { placeholder: 'seconds', description: 'Seconds after login' },
+    { placeholder: 'milliseconds', description: 'Milliseconds after login' },
+    { placeholder: 'years', description: 'Years integer after login' },
+    { placeholder: 'days-of-year', description: 'Days of year after login' },
+    { placeholder: 'years-fraction', description: 'Years fraction after login' },
   ],
 
   Version: [
@@ -680,13 +751,18 @@ export const moduleFormatStrings: Record<string, FormatPlaceholder[]> = {
 
   Zpool: [
     { placeholder: 'name', description: 'Zpool name' },
+    { placeholder: 'guid', description: 'Zpool GUID' },
     { placeholder: 'state', description: 'Zpool state' },
-    { placeholder: 'used', description: 'Size used' },
-    { placeholder: 'total', description: 'Size total' },
-    { placeholder: 'used-percentage', description: 'Size percentage num' },
-    { placeholder: 'fragmentation-percentage', description: 'Fragmentation percentage num' },
+    { placeholder: 'size-used', description: 'Size used' },
+    { placeholder: 'size-allocated', description: 'Size allocated' },
+    { placeholder: 'size-total', description: 'Size total' },
+    { placeholder: 'used-percentage', description: 'Size used percentage num' },
+    { placeholder: 'allocated-percentage', description: 'Size allocated percentage num' },
+    { placeholder: 'frag-percentage', description: 'Fragmentation percentage num' },
     { placeholder: 'used-percentage-bar', description: 'Size percentage bar' },
-    { placeholder: 'fragmentation-percentage-bar', description: 'Fragmentation percentage bar' },
+    { placeholder: 'allocated-percentage-bar', description: 'Size allocated percentage bar' },
+    { placeholder: 'frag-percentage-bar', description: 'Fragmentation percentage bar' },
+    { placeholder: 'is-readonly', description: 'Is read-only' },
   ],
 };
 
@@ -740,11 +816,12 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     type: 'Desktop', vendor: 'Default', version: 'N/A', serial: 'N/A',
   },
   Command: { result: 'Hello World' },
+  Codec: { gpu: 'AMD Radeon', direction: 'Decoder', types: 'H264, HEVC', 'platform-api': 'VA-API' },
   CPU: {
     name: 'AMD Ryzen 9 5950X', vendor: 'AMD', 'cores-physical': '16',
     'cores-logical': '32', 'cores-online': '32', 'freq-base': '3.40 GHz',
     'freq-max': '4.90 GHz', temperature: '45°C', 'core-types': '32x 3.4GHz',
-    packages: '1', march: 'zen3',
+    packages: '1', march: 'zen3', 'numa-nodes': '1', 'code-name': 'Vermeer', technology: '7 nm',
   },
   CPUCache: { result: 'L1: 512 KiB / L2: 4 MiB / L3: 32 MiB', sum: '36.5 MiB' },
   CPUUsage: {
@@ -758,7 +835,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     'weekday-short': 'Mon', 'day-in-year': '141', 'day-in-month': '20', 'day-in-week': '1',
     hour: '14', 'hour-pretty': '14', 'hour-12': '2', 'hour-12-pretty': '02',
     minute: '30', 'minute-pretty': '30', second: '0', 'second-pretty': '00',
-    'offset-from-utc': '+09:00', 'timezone-name': 'JST', 'day-pretty': '20',
+    'offset-from-utc': '+09:00', 'timezone-name': 'JST', 'day-pretty': '20', 'am-pm': 'PM',
   },
   DE: { 'process-name': 'gnome-shell', 'pretty-name': 'GNOME', version: '45.3' },
   Display: {
@@ -768,7 +845,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     inch: '15.6', ppi: '141', 'bit-depth': '8', 'hdr-enabled': 'false',
     'manufacture-year': '2023', 'manufacture-week': '12', serial: 'N/A',
     'platform-api': 'DRM', 'hdr-compatible': 'false', 'scale-factor': '1.0',
-    'preferred-width': '1920', 'preferred-height': '1080', 'preferred-refresh-rate': '60',
+    'preferred-width': '1920', 'preferred-height': '1080', 'preferred-refresh-rate': '60', dpi: '141',
   },
   Disk: {
     'size-used': '15.4 GiB', 'size-total': '50.0 GiB', 'size-percentage': '31',
@@ -776,7 +853,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     'is-external': 'false', 'is-hidden': 'false', filesystem: 'ext4', name: 'root',
     'is-readonly': 'false', 'create-time': '2023-01-01', 'size-percentage-bar': '███░░░░░░░',
     'files-percentage-bar': '░░░░░░░░░░', mountpoint: '/', 'mount-from': '/dev/sda1',
-    'size-free': '34.6 GiB', 'size-available': '32.1 GiB',
+    'size-free': '34.6 GiB', 'size-available': '32.1 GiB', days: '120', hours: '4', minutes: '30', seconds: '12', milliseconds: '250', years: '0', 'days-of-year': '120', 'years-fraction': '0.33',
   },
   DiskIO: {
     'size-read': '50 MiB/s', 'size-written': '25 MiB/s', name: 'sda',
@@ -803,7 +880,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     'platform-api': 'Vulkan', frequency: '2.25', index: '0',
     'dedicated-percentage-num': '12', 'dedicated-percentage-bar': '█░░░░░░░░░',
     'shared-percentage-num': '3', 'shared-percentage-bar': '░░░░░░░░░░',
-    'core-usage-num': '45', 'core-usage-bar': '████░░░░░░', 'memory-type': 'GDDR6',
+    'core-usage-num': '45', 'core-usage-bar': '████░░░░░░', 'memory-type': 'GDDR6', 'pcie-max-speed': 'Gen4 x16', 'pcie-curr-speed': 'Gen4 x16',
   },
   Host: {
     family: 'Desktop', name: 'KVM/QEMU', version: 'Standard PC',
@@ -828,7 +905,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
   },
   Media: {
     combined: 'Never Gonna Give You Up - Rick Astley', title: 'Never Gonna Give You Up',
-    artist: 'Rick Astley', album: 'Whenever You Need Somebody', status: 'Playing',
+    artist: 'Rick Astley', album: 'Whenever You Need Somebody', status: 'Playing', progress: '1:42 / 3:33', 'progress-num': '48', 'progress-bar': 'progress', 'player-name': 'Spotify', 'player-id': 'org.mpris.MediaPlayer2.spotify', url: 'https://open.spotify.com',
   },
   Memory: {
     used: '1.21 GiB', total: '16.00 GiB', percentage: '7',
@@ -863,6 +940,12 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     xbps: '0', 'nix-system': '0', 'nix-user': '0', apk: '0', pkg: '0',
     'flatpak-system': '45', 'flatpak-user': '12', snap: '66', brew: '0',
     'brew-cask': '0', 'scoop-user': '0', 'scoop-global': '0', choco: '0', winget: '0',
+    'am-system': '0', 'am-user': '0', appimage: '0', 'brew-all': '0', cards: '0', eopkg: '0',
+    'flatpak-all': '0', 'guix-all': '0', 'guix-home': '0', 'guix-system': '0', 'guix-user': '0',
+    'hpkg-all': '0', 'hpkg-system': '0', 'hpkg-user': '0', 'install-release': '0', kiss: '0',
+    linglong: '0', lpkg: '0', lpkgbuild: '0', macports: '0', mport: '0', moss: '0', 'nix-all': '0',
+    'nix-default': '0', opkg: '0', 'pacman-branch': '', pacstall: '0', paludis: '0', pisi: '0',
+    pkgsrc: '0', pkgtool: '0', porg: '0', soar: '0', sorcery: '0',
   },
   PhysicalDisk: {
     size: '500 GB', name: 'Samsung SSD 980', interconnect: 'NVMe',
@@ -874,7 +957,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     bytes: '8589934592', size: '8 GiB', 'max-speed': '3200',
     'running-speed': '3200', type: 'DDR4', 'form-factor': 'DIMM',
     locator: 'BANK0/SIMM0', vendor: 'Samsung', serial: 'A1B2C3',
-    'part-number': 'M378A1K43EB2', 'is-ecc-enabled': 'false',
+    'part-number': 'M378A1K43EB2', 'is-ecc-enabled': 'false', 'is-installed': 'true',
   },
   Player: {
     player: 'Spotify', name: 'spotify', id: 'org.mpris.MediaPlayer2.spotify',
@@ -892,7 +975,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     'exe-path': '/usr/bin/bash', tty: 'pts/0',
   },
   Sound: {
-    'is-main': 'true', name: 'PulseAudio', 'volume-percentage': '75',
+    'is-main': 'true', 'is-active': 'true', name: 'PulseAudio', 'volume-percentage': '75',
     identifier: 'default', 'volume-percentage-bar': '███████░░░',
     'platform-api': 'PipeWire',
   },
@@ -918,7 +1001,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
     'user-name': 'user', 'host-name': 'hostname', 'home-dir': '/home/user',
     'exe-path': '/usr/bin/bash', 'user-shell': '/bin/bash',
     'user-name-colored': 'user', 'at-symbol-colored': '@',
-    'host-name-colored': 'hostname', 'full-user-name': 'User Name',
+    'host-name-colored': 'hostname', 'full-user-name': 'User Name', 'user-id': '1000', pid: '1234', cwd: '~/fastfetch-configurator',
   },
   Theme: { theme1: 'Adwaita', theme2: 'GTK3' },
   TPM: { version: '2.0', description: 'Enabled' },
@@ -930,7 +1013,7 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
   Users: {
     name: 'user', 'host-name': 'localhost', 'session-name': 'tty1',
     'client-ip': '127.0.0.1', 'login-time': '2024-05-20 12:00:00',
-    days: '0', hours: '2', minutes: '30', seconds: '0',
+    days: '0', hours: '2', minutes: '30', seconds: '0', milliseconds: '0', years: '0', 'days-of-year': '0', 'years-fraction': '0.0',
   },
   Version: {
     'project-name': 'fastfetch', version: '2.8.0', 'version-tweak': '',
@@ -958,9 +1041,9 @@ export const formatDummyValues: Record<string, Record<string, string>> = {
   },
   WMTheme: { result: 'Adwaita' },
   Zpool: {
-    name: 'rpool', state: 'ONLINE', used: '1.2 TiB', total: '2.0 TiB',
-    'used-percentage': '60', 'fragmentation-percentage': '12',
-    'used-percentage-bar': '██████░░░░', 'fragmentation-percentage-bar': '█░░░░░░░░░',
+    name: 'rpool', guid: '1234567890', state: 'ONLINE', 'size-used': '1.2 TiB', 'size-allocated': '1.3 TiB', 'size-total': '2.0 TiB',
+    'used-percentage': '60', 'allocated-percentage': '65', 'frag-percentage': '12',
+    'used-percentage-bar': '██████░░░░', 'allocated-percentage-bar': '██████░░░░', 'frag-percentage-bar': '█░░░░░░░░░', 'is-readonly': 'false',
   },
 };
 

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/2.66.0/doc/json_schema.json",
+  "logo": null,
+  "display": { "separator": " :: ", "key": { "type": "string" } },
+  "modules": [
+    { "type": "display", "compactType": "original-with-refresh-rate", "preciseRefreshRate": true }
+  ]
+}

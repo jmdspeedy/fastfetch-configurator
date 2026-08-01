@@ -4,13 +4,18 @@ import { useConfigStore } from '@/store/config';
 import { commonLogos } from '@/utils/logos';
 import { allLogos } from '@/data/allLogos';
 import { convertImageToAscii } from '@/utils/ascii';
-import { useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Upload, Image as ImageIcon, Search } from 'lucide-react';
 
 import ColorPicker from './ColorPicker';
+import SchemaFields from './SchemaFields';
+import { FastfetchSchemaDocument, loadFastfetchSchema } from '@/utils/fastfetchSchema';
 
 export default function AppearanceControls() {
-  const { logo, setPresetLogo, setCustomLogo, display, updateDisplay } = useConfigStore();
+  const { logo, setPresetLogo, setCustomLogo, display, updateDisplay, general, updateGeneral } = useConfigStore();
+  const [schema, setSchema] = useState<FastfetchSchemaDocument | null>(null);
+  useEffect(() => { loadFastfetchSchema().then(setSchema).catch(() => setSchema(null)); }, []);
+  const displayColors = typeof display.color === 'object' && display.color ? display.color : {};
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [logoMode, setLogoMode] = useState<'common' | 'all'>('common');
@@ -154,32 +159,32 @@ export default function AppearanceControls() {
           <div>
             <ColorPicker
               label="Keys Color"
-              value={display.color?.keys}
-              onChange={(val) => updateDisplay({ color: { ...display.color, keys: val } })}
+              value={displayColors.keys}
+              onChange={(val) => updateDisplay({ color: { ...displayColors, keys: val } })}
             />
           </div>
 
           <div>
             <ColorPicker
               label="Title Color"
-              value={display.color?.title}
-              onChange={(val) => updateDisplay({ color: { ...display.color, title: val } })}
+              value={displayColors.title}
+              onChange={(val) => updateDisplay({ color: { ...displayColors, title: val } })}
             />
           </div>
 
           <div>
             <ColorPicker
               label="Output Color"
-              value={display.color?.output}
-              onChange={(val) => updateDisplay({ color: { ...display.color, output: val } })}
+              value={displayColors.output}
+              onChange={(val) => updateDisplay({ color: { ...displayColors, output: val } })}
             />
           </div>
 
           <div>
             <ColorPicker
               label="Separator Color"
-              value={display.color?.separator}
-              onChange={(val) => updateDisplay({ color: { ...display.color, separator: val } })}
+              value={displayColors.separator}
+              onChange={(val) => updateDisplay({ color: { ...displayColors, separator: val } })}
             />
           </div>
 
@@ -195,6 +200,24 @@ export default function AppearanceControls() {
           </div>
         </div>
       </div>
+
+      {schema?.properties?.display && (
+        <SchemaFields
+          schema={schema}
+          node={schema.properties.display}
+          value={display as unknown as Record<string, unknown>}
+          omit={['color', 'separator']}
+          onChange={(next) => updateDisplay(next)}
+        />
+      )}
+      {schema?.properties?.general && (
+        <SchemaFields
+          schema={schema}
+          node={schema.properties.general}
+          value={general}
+          onChange={updateGeneral}
+        />
+      )}
 
     </div>
   );

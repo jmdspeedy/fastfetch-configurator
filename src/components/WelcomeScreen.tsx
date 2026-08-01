@@ -80,8 +80,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
         setError(null);
         try {
             const [presetsRes, examplesRes] = await Promise.all([
-                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets?ref=dev'),
-                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=dev'),
+                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets?ref=2.66.0'),
+                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=2.66.0'),
             ]);
 
             if (!presetsRes.ok || !examplesRes.ok) throw new Error('Failed to fetch templates');

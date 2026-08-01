@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { X, Check } from 'lucide-react';
 import ColorPicker from './ColorPicker';
 import FormatStringInput from './FormatStringInput';
+import SchemaFields from './SchemaFields';
+import { FastfetchSchemaDocument, FastfetchSchemaNode, findModuleSchema, loadFastfetchSchema } from '@/utils/fastfetchSchema';
 
 interface ModuleEditorProps {
     moduleId: string;
@@ -20,6 +22,21 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     const [localConfig, setLocalConfig] = useState<ModuleConfig | null>(
         moduleData ? { ...moduleData } : null
     );
+    const [schema, setSchema] = useState<FastfetchSchemaDocument | null>(null);
+    const [schemaNode, setSchemaNode] = useState<FastfetchSchemaNode | null>(null);
+    const [schemaError, setSchemaError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let active = true;
+        loadFastfetchSchema().then((document) => {
+            if (!active) return;
+            setSchema(document);
+            setSchemaNode(findModuleSchema(document, moduleData?.type || '') || null);
+        }).catch((error: unknown) => {
+            if (active) setSchemaError(error instanceof Error ? error.message : 'Unable to load Fastfetch schema');
+        });
+        return () => { active = false; };
+    }, [moduleData?.type]);
 
     if (!moduleData || !localConfig) return null;
 
@@ -134,6 +151,16 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                             onChange={(val) => handleChange('outputColor', val)}
                         />
                     </div>
+
+                    {schema && schemaNode && (
+                        <SchemaFields
+                            schema={schema}
+                            node={schemaNode}
+                            value={localConfig as unknown as Record<string, unknown>}
+                            onChange={(next) => setLocalConfig(next as ModuleConfig)}
+                        />
+                    )}
+                    {schemaError && <p className="text-[10px] text-amber-300 border-t border-gray-800 pt-3">Advanced schema controls unavailable: {schemaError}</p>}
                 </div>
 
                 {/* Footer */}

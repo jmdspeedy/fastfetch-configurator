@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/2.66.0/doc/json_schema.json",
+  "logo": null,
+  "display": {
+    "separator": " :: ",
+    "color": {
+      "keys": "red",
+      "output": "green",
+      "separator": "blue"
+    },
+    "key": {
+      "type": "string",
+      "width": 7
+    }
+  },
+  "modules": [
+    {
+      "type": "command",
+      "text": "echo deterministic",
+      "key": "Command",
+      "format": "{result}"
+    }
+  ]
+}

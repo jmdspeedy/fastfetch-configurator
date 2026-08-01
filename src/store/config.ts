@@ -8,7 +8,7 @@ export type ModuleType =
   | 'battery' | 'poweradapter' | 'player' | 'media' | 'localip' | 'publicip'
   | 'wifi' | 'datetime' | 'locale' | 'vulkan' | 'opengl' | 'opencl' | 'users'
   | 'bluetooth' | 'sound' | 'gamepad' | 'weather' | 'netio' | 'diskio'
-  | 'physicaldisk' | 'version' | 'break' | 'colors' | 'command'
+  | 'physicaldisk' | 'version' | 'break' | 'colors' | 'command' | 'file' | 'codec'
   | 'bios' | 'bluetoothradio' | 'board' | 'bootmgr' | 'brightness' | 'btrfs'
   | 'camera' | 'chassis' | 'cpucache' | 'cpuusage' | 'custom' | 'dns'
   | 'editor' | 'initsystem' | 'keyboard' | 'lm' | 'loadavg' | 'logo'
@@ -28,7 +28,7 @@ export interface ModuleConfig {
 }
 
 export interface LogoConfig {
-  type: 'auto' | 'builtin' | 'file' | 'data' | 'raw' | 'sixel' | 'kitty' | 'iterm' | 'chafa' | 'small';
+  type: 'auto' | 'builtin' | 'small' | 'file' | 'file-raw' | 'data' | 'data-raw' | 'command-raw' | 'raw' | 'sixel' | 'kitty' | 'kitty-direct' | 'kitty-icat' | 'iterm' | 'chafa' | 'none' | string;
   source?: string;
   width?: number;
   height?: number;
@@ -53,9 +53,14 @@ export interface DisplayConfig {
     title?: string;
     output?: string;
     separator?: string;
-  };
+  } | string;
   separator?: string;
   keyWidth?: number;
+  key?: {
+    width?: number;
+    type?: 'none' | 'string' | 'icon' | 'both' | 'both-0' | 'both-1' | 'both-2' | 'both-3' | 'both-4' | string;
+    paddingLeft?: number;
+  };
   [key: string]: unknown;
 }
 
@@ -63,6 +68,7 @@ interface ConfigState {
   modules: ModuleConfig[];
   logo: LogoConfig;
   display: DisplayConfig;
+  general: Record<string, unknown>;
 
   // Actions
   addModule: (type: string) => void;
@@ -73,6 +79,7 @@ interface ConfigState {
   setPresetLogo: (name: string) => void;
   setCustomLogo: (content: string) => void;
   updateDisplay: (updates: Partial<DisplayConfig>) => void;
+  updateGeneral: (updates: Record<string, unknown>) => void;
   resetConfig: () => void;
   loadConfig: (json: string) => void;
 }
@@ -123,6 +130,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
       title: 'blue',
     }
   },
+  general: {},
 
   addModule: (type) => set((state) => ({
     modules: [...state.modules, { id: uuidv4(), type }]
@@ -166,10 +174,15 @@ export const useConfigStore = create<ConfigState>((set) => ({
     display: { ...state.display, ...updates }
   })),
 
+  updateGeneral: (updates) => set((state) => ({
+    general: { ...state.general, ...updates }
+  })),
+
   resetConfig: () => set({
     modules: defaultModules,
     logo: { type: 'auto', padding: { top: 2, left: 2 }, _presetName: 'arch' },
-    display: { separator: '  ->  ', color: { keys: 'blue', title: 'blue' } }
+    display: { separator: '  ->  ', color: { keys: 'blue', title: 'blue' } },
+    general: {}
   }),
 
   loadConfig: (json) => {
@@ -250,8 +263,9 @@ export const useConfigStore = create<ConfigState>((set) => ({
       // Basic validation/migration logic would be needed here
       // For now, just a direct set if structure matches
       set({
-        logo: parsed.logo || { type: 'auto', _presetName: 'arch' },
+        logo: parsed.logo === null ? { type: 'none' } : (parsed.logo || { type: 'auto', _presetName: 'arch' }),
         display: parsed.display || {},
+        general: parsed.general || {},
         modules: parsed.modules?.map((m: string | ModuleConfig) => {
           if (typeof m === 'string') {
             // Simple string module like "title" — normalize to lowercase

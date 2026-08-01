@@ -1,0 +1,58 @@
+name: Fastfetch parity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  native-parity:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: fastfetch-linux-amd64.zip
+            binary: fastfetch-linux-amd64/fastfetch
+            sha256: 9639e8716d747addb9af168948b943a388a9ba8b39b710ad73cf715c73845af0
+          - os: windows-latest
+            asset: fastfetch-windows-amd64.zip
+            binary: fastfetch-windows-amd64/fastfetch.exe
+            sha256: 3035b8add360bc3142ce81ac39be352d3738273224e232195217f01c2398c87a
+          # The release asset is amd64; macos-13 is the Intel runner.
+          - os: macos-13
+            asset: fastfetch-macos-amd64.zip
+            binary: fastfetch-macos-amd64/fastfetch
+            sha256: 563cfca8688ec2c1998a148f5f2dcdfceb45777df664f7d3d415ab84c1bffc19
+    runs-on: ${{ matrix.os }}
+    env:
+      FASTFETCH_VERSION: 2.66.0
+      FASTFETCH_ASSET: ${{ matrix.asset }}
+      FASTFETCH_SHA256: ${{ matrix.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Download Fastfetch (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/${FASTFETCH_ASSET}" --output fastfetch.zip
+          test "$(shasum -a 256 fastfetch.zip | cut -d ' ' -f 1)" = "${FASTFETCH_SHA256}"
+          unzip -q fastfetch.zip
+          chmod +x "${{ matrix.binary }}"
+      - name: Download Fastfetch (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/fastfetch-cli/fastfetch/releases/download/$env:FASTFETCH_VERSION/$env:FASTFETCH_ASSET" -OutFile fastfetch.zip
+          if ((Get-FileHash -Algorithm SHA256 -LiteralPath fastfetch.zip).Hash.ToLowerInvariant() -ne $env:FASTFETCH_SHA256) { throw 'Fastfetch archive checksum mismatch' }
+          Expand-Archive -LiteralPath fastfetch.zip -DestinationPath .
+      - name: Run tests with native Fastfetch
+        shell: bash
+        env:
+          FASTFETCH_BIN: ${{ github.workspace }}/${{ matrix.binary }}
+        run: npm test

@@ -1,36 +1,16 @@
 'use client';
 
-import { useConfigStore, ModuleConfig } from '@/store/config';
+import { useConfigStore } from '@/store/config';
+import { generateConfigString } from '@/utils/configExport';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 
 export default function JsonPreview() {
-  const { modules, logo, display } = useConfigStore();
+  const { modules, logo, display, general } = useConfigStore();
   const [copied, setCopied] = useState(false);
 
   const generateConfig = () => {
-    // 1. Clean modules (remove internal IDs)
-    const cleanModules = modules.map(({ id, ...rest }) => {
-      // If it only has 'type', return the string (shorthand)
-      if (Object.keys(rest).length === 1 && rest.type) {
-        return rest.type;
-      }
-      return rest;
-    });
-
-    // 2. Construct full object
-    const config = {
-      $schema: 'https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json',
-      logo: {
-        ...logo,
-        _presetName: undefined, // Remove internal flags
-        _customContent: undefined
-      },
-      display,
-      modules: cleanModules,
-    };
-
-    return JSON.stringify(config, null, 2);
+    return generateConfigString(modules, logo, display, general);
   };
 
   const copyToClipboard = () => {

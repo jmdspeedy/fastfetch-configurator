@@ -1,297 +1,157 @@
 'use client';
 
-import { useConfigStore, ModuleConfig } from '@/store/config';
+import { useMemo, useRef, useState } from 'react';
+import { useConfigStore, LogoConfig } from '@/store/config';
 import { getLogoData } from '@/utils/logos';
-import { getDummyValues } from '@/data/moduleFormatStrings';
+import { buildPreviewModel, PreviewSegment } from '@/utils/fastfetchPreview';
+import { previewProfiles, PreviewPlatform, PreviewProfile } from '@/data/previewProfiles';
+import { getCaptureCommand, parseFastfetchCapture } from '@/utils/fastfetchCapture';
 import clsx from 'clsx';
 import Ansi from 'ansi-to-react';
 
-/**
- * Resolve a format string by replacing {placeholder} tokens with dummy sample values.
- * Falls back to the raw placeholder text if no dummy value is found.
- */
-const resolveFormatString = (format: string, moduleType: string): string => {
-  const dummies = getDummyValues(moduleType);
-  return format.replace(/\{([^}]+)\}/g, (_match, key: string) => {
-    return dummies[key] ?? `{${key}}`;
-  });
-};
+function colorClass(color?: string) {
+  if (!color) return 'text-gray-300';
+  if (color.startsWith('text-')) return color;
+  const normalized = color.replace(/^(reset_|bright_|light_|dim_|italic_|underline_|blink_|inverse_)+/g, '');
+  const map: Record<string, string> = {
+    black: 'text-gray-900', red: 'text-red-500', green: 'text-green-500', yellow: 'text-yellow-500',
+    blue: 'text-blue-500', magenta: 'text-pink-500', cyan: 'text-cyan-500', white: 'text-gray-100', default: 'text-gray-300',
+  };
+  return map[normalized] || 'text-gray-300';
+}
 
-// Mapping module types to dummy data
-const getModuleContent = (module: ModuleConfig, displaySeparator: string = ': ') => {
-  const key = module.key || module.type;
-  let value = '';
+function segmentStyle(segment: PreviewSegment) {
+  const style: React.CSSProperties = {};
+  if (segment.color?.startsWith('#')) style.color = segment.color;
+  if (segment.color?.startsWith('@')) style.color = '#d1d5db';
+  return style;
+}
 
-  // If a custom format string is set, resolve it and use as the display value
-  if (module.format) {
-    const resolved = resolveFormatString(module.format, module.type);
-    // Special types still need their own rendering path
-    const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();
-    if (normalizedType === 'Title') return { type: 'title', value: resolved };
-    if (normalizedType === 'Separator') return { type: 'separator', value: resolved };
-    if (normalizedType === 'Colors') return { type: 'colors', value: '' };
-    if (normalizedType === 'Break') return { type: 'break', value: '' };
-    if (normalizedType === 'Custom' || normalizedType === 'Text') {
-      return { type: 'custom', value: resolved };
-    }
-    return { type: 'info', key, value: resolved, separator: displaySeparator };
-  }
+function renderSegments(segments: PreviewSegment[], fallbackColor?: string) {
+  return segments.map((segment, index) => (
+    <span
+      key={`${segment.text}-${index}`}
+      className={clsx(colorClass(segment.color || fallbackColor), segment.bold && 'font-bold', segment.italic && 'italic', segment.underline && 'underline')}
+      style={segmentStyle(segment)}
+    >
+      {segment.text}
+    </span>
+  ));
+}
 
-  // Normalize type to Title Case for case-insensitive matching
-  const normalizedType = module.type.charAt(0).toUpperCase() + module.type.slice(1).toLowerCase();
-
-  switch (normalizedType) {
-    case 'Title': return { type: 'title', value: 'user@hostname' };
-    case 'Separator': return { type: 'separator', value: '-------------------' };
-    case 'Os': value = 'Arch Linux x86_64'; break;
-    case 'Host': value = 'KVM/QEMU (Standard PC)'; break;
-    case 'Kernel': value = '6.6.13-linux'; break;
-    case 'Uptime': value = '42 mins'; break;
-    case 'Packages': value = '1203 (pacman)'; break;
-    case 'Shell': value = 'bash 5.2.21'; break;
-    case 'Display': value = '1920x1080 @ 60Hz'; break;
-    case 'De': value = 'GNOME 45.3'; break;
-    case 'Wm': value = 'Mutter'; break;
-    case 'Wmtheme': value = 'Adwaita'; break;
-    case 'Theme': value = 'Adwaita [GTK2/3]'; break;
-    case 'Icons': value = 'Adwaita [GTK2/3]'; break;
-    case 'Font': value = 'Cantarell (11pt)'; break;
-    case 'Cursor': value = 'Adwaita'; break;
-    case 'Terminal': value = 'gnome-terminal'; break;
-    case 'Terminalfont': value = 'Monospace (12pt)'; break;
-    case 'Cpu': value = 'AMD Ryzen 9 5950X (4) @ 3.4GHz'; break;
-    case 'Gpu': value = 'Red Hat QXL Paravirtual Graphic Card'; break;
-    case 'Memory': value = '1.21 GiB / 16.00 GiB'; break;
-    case 'Swap': value = '0 B / 4.00 GiB'; break;
-    case 'Disk': value = '15.4 GiB / 50.0 GiB (31%)'; break;
-    case 'Battery': value = '100% [Charging]'; break;
-    case 'Poweradapter': value = '65W'; break;
-    case 'Player': value = 'Spotify'; break;
-    case 'Media': value = 'Never Gonna Give You Up - Rick Astley'; break;
-    case 'Localip': value = '192.168.1.45'; break;
-    case 'Publicip': value = '203.0.113.1'; break;
-    case 'Wifi': value = 'MyWifi (70%)'; break;
-    case 'Datetime': value = '2024-05-20 14:30:00'; break;
-    // Additional modules with placeholders
-    case 'Locale': value = 'en_US.UTF-8'; break;
-    case 'Vulkan': value = 'Mesa 24.0.1 (Driver: RADV)'; break;
-    case 'Opengl': value = 'OpenGL 4.6 (Mesa 24.0.1)'; break;
-    case 'Opencl': value = 'OpenCL 3.0'; break;
-    case 'Users': value = '2 (user, guest)'; break;
-    case 'Bluetooth': value = 'Intel Wireless (Connected)'; break;
-    case 'Sound': value = 'PulseAudio (pipewire-pulse)'; break;
-    case 'Gamepad': value = 'Xbox Wireless Controller'; break;
-    case 'Weather': value = 'Tokyo: 🌤 22°C'; break;
-    case 'Netio': value = '↓ 1.2 MiB/s ↑ 0.3 MiB/s'; break;
-    case 'Diskio': value = '↓ 50 MiB/s ↑ 25 MiB/s'; break;
-    case 'Physicaldisk': value = 'Samsung SSD 980 (500GB)'; break;
-    case 'Version': value = 'fastfetch 2.8.0 (x86_64)'; break;
-    case 'Bios': value = 'American Megatrends v2.2'; break;
-    case 'Bluetoothradio': value = 'Intel AX200 (Enabled)'; break;
-    case 'Board': value = 'ASUS ROG B550-F Gaming'; break;
-    case 'Bootmgr': value = 'systemd-boot'; break;
-    case 'Brightness': value = '75%'; break;
-    case 'Btrfs': value = '/dev/sda1: 450 GiB / 500 GiB'; break;
-    case 'Camera': value = 'Integrated Webcam (1080p)'; break;
-    case 'Chassis': value = 'Desktop'; break;
-    case 'Cpucache': value = 'L1: 512 KiB / L2: 4 MiB / L3: 32 MiB'; break;
-    case 'Cpuusage': value = '15%'; break;
-    case 'Dns': value = '8.8.8.8, 1.1.1.1'; break;
-    case 'Editor': value = 'nvim'; break;
-    case 'Initsystem': value = 'systemd 255'; break;
-    case 'Keyboard': value = 'US QWERTY'; break;
-    case 'Lm': value = 'SDDM'; break;
-    case 'Loadavg': value = '0.52, 0.48, 0.43'; break;
-    case 'Logo': return { type: 'break', value: '' }; // Logo is handled separately
-    case 'Monitor': value = 'LG 27GL850 (2560x1440 @ 144Hz)'; break;
-    case 'Mouse': value = 'Logitech G502 HERO'; break;
-    case 'Physicalmemory': value = '2x 8 GiB DDR4 3200MHz'; break;
-    case 'Processes': value = '245'; break;
-    case 'Terminalsize': value = '120x40'; break;
-    case 'Terminaltheme': value = 'Dracula'; break;
-    case 'Tpm': value = 'TPM 2.0 (Enabled)'; break;
-    case 'Wallpaper': value = '/usr/share/backgrounds/arch.png'; break;
-    case 'Zpool': value = 'rpool: 1.2 TiB / 2.0 TiB'; break;
-    case 'Colors': return { type: 'colors', value: '' };
-    case 'Break': return { type: 'break', value: '' };
-    case 'Command':
-      // Show the command output placeholder
-      value = module.text ? `$(output of "${module.text}")` : '$(command output)';
-      break;
-    case 'File':
-      // Show file path placeholder
-      value = module.source ? `[File: ${module.source}]` : '[File Content]';
-      break;
-    case 'Custom':
-    case 'Text':
-      // Custom modules display the 'key' field as output text (fastfetch behavior)
-      return { type: 'custom', value: module.key || module.format || 'Custom Text' };
-    default: value = module.type;
-  }
-
-  return { type: 'info', key, value, separator: displaySeparator };
-};
-
-export default function TerminalPreview() {
-  const { modules, logo, display } = useConfigStore();
-
-  // Determine Logo Data
-  // Prefer explicit source, fallback to preset name (legacy), fallback to Arch
+function LogoPreview({ logo }: { logo: LogoConfig }) {
   const logoName = logo.source || logo._presetName || 'Arch';
   const logoData = getLogoData(logoName) || getLogoData('Arch');
+  if (logo.type === 'none') return null;
+  if (!logo._customContent && !getLogoData(logoName) && logo.type !== 'auto') {
+    return <div className="text-[11px] text-amber-300 whitespace-pre">[logo source unavailable in browser: {logo.source || logo.type}]</div>;
+  }
 
-  // Helper to render a single line of the logo with colors
-  const renderLogoLine = (line: string, lineIndex: number) => {
+  const renderLine = (line: string, index: number) => {
     if (!logoData) return null;
-    const { colors } = logoData;
-
-    // Use first color as default if no markers
-    let currentColor = colors[0] || 'text-gray-200';
-
-    // If line has no markers, render directly
-    if (!line.includes('$')) {
-      // Use div to ensure line break, handle empty lines
-      return <div key={lineIndex} className={currentColor}>{line || '\u00A0'}</div>;
-    }
-
-    // Split by $1-$9 markers
+    const colors = Array.isArray(logo.color)
+      ? Object.fromEntries((logo.color as unknown[]).map((color, index) => [String(index + 1), String(color)]))
+      : typeof logo.color === 'object' && logo.color ? logo.color as Record<string, string> : undefined;
+    let currentColor = colors?.['1'] || logoData.colors[0] || 'text-gray-200';
     const parts = line.split(/(\$[1-9])/g);
-
     return (
-      <div key={lineIndex} className="whitespace-pre">
-        {parts.map((part, i) => {
-          // If part is a marker, update current color
-          if (part.match(/^\$[1-9]$/)) {
-            const colorIndex = parseInt(part[1]) - 1;
-            currentColor = colors[colorIndex] || 'text-gray-200';
-            return null; // Don't render the marker
+      <div key={index} className="whitespace-pre leading-tight">
+        {parts.map((part, partIndex) => {
+          if (/^\$[1-9]$/.test(part)) {
+            currentColor = colors?.[part[1]] || logoData.colors[Number(part[1]) - 1] || currentColor;
+            return null;
           }
-          // If empty part (e.g. string starts with marker), skip
-          if (!part) return null;
-
-          return <span key={i} className={currentColor}>{part}</span>;
+          return part ? <span key={partIndex} className={colorClass(currentColor)}>{part}</span> : null;
         })}
       </div>
     );
   };
 
-  const separator = display.separator || ': ';
-  const keyColor = display.color?.keys || 'blue';
-  const titleColor = display.color?.title || 'blue';
-  const outputColor = display.color?.output || 'default';
-  const separatorColor = display.color?.separator || 'default';
+  return (
+    <div
+      className="font-bold whitespace-pre select-none"
+      style={{
+        paddingTop: `${logo.padding?.top || 0}em`,
+        paddingBottom: `${logo.padding?.bottom || 0}em`,
+        paddingLeft: `${logo.padding?.left || 0}ch`,
+        paddingRight: `${logo.padding?.right || 0}ch`,
+      }}
+    >
+      {logo._customContent ? <Ansi>{logo._customContent}</Ansi> : logoData?.ascii.split('\n').map(renderLine)}
+    </div>
+  );
+}
 
-  // Tailwind map for simple color names
-  // Tailwind map for simple color names
-  const getColorClass = (colorName?: string) => {
-    if (!colorName) return 'text-gray-200'; // Default text color
-
-    // Normalize (handle bold_, bright_, etc. by stripping locally for preview simplicity)
-    // In a real terminal emulator we'd handle brightness, but for a simple preview:
-    const normalized = colorName.replace(/^(bold_|bright_|italic_|underline_|blink_)+/, '');
-
-    const map: Record<string, string> = {
-      black: 'text-gray-900', red: 'text-red-500', green: 'text-green-500',
-      yellow: 'text-yellow-500', blue: 'text-blue-500', magenta: 'text-pink-500',
-      cyan: 'text-cyan-500', white: 'text-gray-100', default: 'text-gray-300'
-    };
-
-    return map[normalized] || map[colorName] || 'text-gray-300';
-  };
+export default function TerminalPreview() {
+  const { modules, logo, display } = useConfigStore();
+  const [platform, setPlatform] = useState<PreviewPlatform>('linux');
+  const [capture, setCapture] = useState<PreviewProfile | null>(null);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const [terminalColumns, setTerminalColumns] = useState(100);
+  const captureInputRef = useRef<HTMLInputElement>(null);
+  const activeProfile = capture || previewProfiles[platform];
+  const model = useMemo(() => buildPreviewModel(modules, logo, display, activeProfile), [modules, logo, display, activeProfile]);
+  const logoPosition = logo.position || 'left';
+  const lineWrapClass = display.disableLinewrap === true ? 'whitespace-pre' : 'whitespace-pre-wrap break-all';
+  const moduleContent = (
+    <div className="flex flex-col gap-0 min-w-0">
+      {model.lines.map((line) => {
+        if (line.kind === 'break') return <div key={line.id} className="h-4" />;
+        if (line.kind === 'colors') {
+          return <div key={line.id} className="mt-2 flex whitespace-pre" aria-label="Fastfetch color palette">
+            {(line.colorBlocks || []).map((block) => <span key={block.index} style={{ backgroundColor: block.background }}>{block.text}</span>)}
+          </div>;
+        }
+        const lineClass = line.kind === 'title' ? 'font-bold' : lineWrapClass;
+        return <div key={line.id} className={lineClass}>{renderSegments(line.segments, line.outputColor)}</div>;
+      })}
+    </div>
+  );
 
   return (
     <div className="bg-black/90 rounded-lg border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm h-full flex flex-col">
-      {/* Terminal Title Bar */}
       <div className="bg-[#2d2d2d] px-4 py-2 flex items-center gap-2 border-b border-gray-800">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-          <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-          <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-        </div>
+        <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-[#ff5f56]" /><div className="w-3 h-3 rounded-full bg-[#ffbd2e]" /><div className="w-3 h-3 rounded-full bg-[#27c93f]" /></div>
         <div className="flex-1 text-center text-gray-400 text-xs">user@fastfetch-config: ~</div>
+        <div className="flex items-center gap-1">
+          {!capture && <label className="text-[10px] text-gray-500 flex items-center gap-1">Sample
+            <select value={platform} onChange={(event) => setPlatform(event.target.value as PreviewPlatform)} className="bg-[#252525] text-gray-300 border border-gray-600 rounded px-1 py-0.5">
+              {Object.values(previewProfiles).map((profile) => <option key={profile.id} value={profile.id}>{profile.label}</option>)}
+            </select>
+          </label>}
+          {capture && <span className="text-[10px] text-emerald-300">{activeProfile.label}</span>}
+          <label className="text-[10px] text-gray-500 flex items-center gap-1">Cols
+            <select value={terminalColumns} onChange={(event) => setTerminalColumns(Number(event.target.value))} className="bg-[#252525] text-gray-300 border border-gray-600 rounded px-1 py-0.5">
+              {[80, 100, 120, 160].map((columns) => <option key={columns} value={columns}>{columns}</option>)}
+            </select>
+          </label>
+          <input ref={captureInputRef} type="file" accept=".json,.jsonc" className="hidden" onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              try { setCapture(parseFastfetchCapture(String(reader.result || ''))); setCaptureError(null); }
+              catch (error) { setCaptureError(error instanceof Error ? error.message : 'Invalid Fastfetch capture'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+          }} />
+          <button type="button" title={`Run “${getCaptureCommand(platform)}”, then load the JSON file`} onClick={() => captureInputRef.current?.click()} className="text-[10px] text-gray-400 hover:text-white border border-gray-600 rounded px-1.5 py-0.5">Load capture</button>
+          {capture && <button type="button" onClick={() => setCapture(null)} className="text-[10px] text-gray-400 hover:text-white border border-gray-600 rounded px-1.5 py-0.5">Sample</button>}
+        </div>
       </div>
 
-      {/* Terminal Content */}
-      <div className="p-6 text-gray-300 overflow-auto custom-scrollbar">
-        <div className="flex gap-6">
-          {/* Logo */}
-          <div className="font-bold whitespace-pre leading-tight select-none">
-            {logo._customContent ? (
-              <Ansi>{logo._customContent}</Ansi>
-            ) : (
-              logoData?.ascii.split('\n').map((line, i) => renderLogoLine(line, i))
-            )}
-          </div>
-
-          {/* Info Modules */}
-          <div className="flex flex-col gap-0.5">
-            {modules.map((m) => {
-              const data = getModuleContent(m, separator);
-
-              if (data.type === 'title') {
-                if (data.value) {
-                  return (
-                    <div key={m.id} className="mb-1 font-bold text-blue-500">
-                      {data.value}
-                    </div>
-                  );
-                }
-                return (
-                  <div key={m.id} className="mb-1">
-                    <span className={clsx("font-bold", getColorClass(titleColor))}>user</span>
-                    <span className={clsx("font-bold", getColorClass(separatorColor))}>@</span>
-                    <span className={clsx("font-bold", getColorClass(titleColor))}>hostname</span>
-                  </div>
-                );
-              }
-
-              if (data.type === 'separator') {
-                return <div key={m.id} className="text-gray-500 mb-1">{data.value}</div>;
-              }
-
-              if (data.type === 'break') {
-                return <div key={m.id} className="h-4"></div>;
-              }
-
-              if (data.type === 'colors') {
-                return (
-                  <div key={m.id} className="mt-2 flex gap-1">
-                    <div className="w-4 h-4 bg-black rounded-sm"></div>
-                    <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-yellow-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-blue-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-pink-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-cyan-500 rounded-sm"></div>
-                    <div className="w-4 h-4 bg-white rounded-sm"></div>
-                  </div>
-                );
-              }
-
-              // Custom modules - display just the value without key/separator
-              // fastfetch uses keyColor for Custom module output
-              if (data.type === 'custom') {
-                return (
-                  <div key={m.id} className={clsx("whitespace-nowrap", getColorClass(m.keyColor || outputColor))}>
-                    {data.value}
-                  </div>
-                );
-              }
-
-              return (
-                <div key={m.id} className="whitespace-nowrap">
-                  <span className={clsx("font-bold", getColorClass(m.keyColor || keyColor))}>
-                    {data.key}
-                  </span>
-                  <span className={clsx(getColorClass(separatorColor))}>{data.separator}</span>
-                  <span className={clsx(getColorClass(m.outputColor || outputColor))}>
-                    {data.value}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+      <div className="p-6 text-gray-300 overflow-auto custom-scrollbar flex-1">
+        <div style={{ width: `${terminalColumns}ch`, maxWidth: '100%' }} className={clsx('flex gap-0', logoPosition === 'top' && 'flex-col', logoPosition === 'right' && 'flex-row-reverse')}>
+          <LogoPreview logo={logo} />
+          {moduleContent}
         </div>
+        {model.diagnostics.length > 0 && (
+          <div className="mt-6 border-t border-amber-900/50 pt-3 text-[11px] text-amber-300 space-y-1">
+            {model.diagnostics.map((diagnostic, index) => <div key={`${diagnostic.message}-${index}`}>ⓘ {diagnostic.message}</div>)}
+          </div>
+        )}
+        {captureError && <div className="mt-3 text-[11px] text-red-300">Capture error: {captureError}</div>}
       </div>
     </div>
   );

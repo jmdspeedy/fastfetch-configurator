@@ -19,7 +19,7 @@ interface DeployModalProps {
 }
 
 export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
-    const { modules, logo, display } = useConfigStore();
+    const { modules, logo, display, general } = useConfigStore();
     const [step, setStep] = useState<'captcha' | 'options' | 'result'>('captcha');
     const [installCommand, setInstallCommand] = useState('');
     const [loading, setLoading] = useState(false);
@@ -79,7 +79,7 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
         setLoading(true);
 
         // Generate config string
-        const configStr = generateConfigString(modules, logo, display);
+        const configStr = generateConfigString(modules, logo, display, general);
         const logoContent = logo._customContent;
 
         const result = await deployConfig(configStr, logoContent, altchaPayload);
@@ -105,7 +105,7 @@ export default function DeployModal({ isOpen, onClose }: DeployModalProps) {
     };
 
     const handleDownload = () => {
-        const json = generateConfigString(modules, logo, display);
+        const json = generateConfigString(modules, logo, display, general);
         downloadConfig(json);
         handleClose();
     };

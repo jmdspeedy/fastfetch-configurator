@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/2.66.0/doc/json_schema.json",
+  "logo": null,
+  "display": { "separator": " :: ", "key": { "type": "string" } },
+  "modules": [
+    "os", "host", "kernel", "uptime", "packages", "shell", "display", "de", "wm", "wmtheme", "theme", "icons", "font", "cursor", "terminal", "terminalfont", "cpu", "gpu", "memory", "swap", "disk", "battery", "poweradapter", "player", "media", "localip", "publicip", "wifi", "datetime", "locale", "vulkan", "opengl", "opencl", "users", "bluetooth", "sound", "gamepad", "weather", "netio", "diskio", "physicaldisk", "version", "codec", "bios", "bluetoothradio", "board", "bootmgr", "brightness", "btrfs", "camera", "chassis", "cpucache", "cpuusage", "dns", "editor", "initsystem", "keyboard", "lm", "loadavg", "monitor", "mouse", "physicalmemory", "processes", "terminalsize", "terminaltheme", "tpm", "wallpaper", "zpool"
+  ]
+}

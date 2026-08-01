@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/2.66.0/doc/json_schema.json",
+  "logo": null,
+  "display": { "separator": " :: ", "key": { "type": "string" } },
+  "modules": ["os", "host", "kernel", "uptime", "shell", "display", "wm", "wmtheme", "theme", "icons", "font", "cursor", "terminal", "terminalfont", "cpu", "gpu", "memory", "swap", "disk", "localip", "battery", "poweradapter", "bios", "board", "chassis", "camera", "physicalmemory", "processes", "terminalsize", "tpm", "version", "vulkan", "wifi", "users"]
+}

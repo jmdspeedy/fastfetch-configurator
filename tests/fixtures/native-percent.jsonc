@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fastfetch-cli/fastfetch/2.66.0/doc/json_schema.json",
+  "logo": null,
+  "display": {
+    "separator": " :: ",
+    "key": { "type": "string" },
+    "percent": { "type": 3, "ndigits": 1, "spaceBeforeUnit": "always" },
+    "bar": { "width": 10, "char": { "elapsed": "#", "total": "." }, "border": { "left": "[", "right": "]" } }
+  },
+  "modules": ["memory", "swap", "disk", "brightness", "cpuusage"]
+}

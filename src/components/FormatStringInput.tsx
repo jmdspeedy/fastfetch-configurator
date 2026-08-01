@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { getFormatPlaceholders, FormatPlaceholder } from '@/data/moduleFormatStrings';
+import { findModuleSchema, loadFastfetchSchema, resolveSchemaRef } from '@/utils/fastfetchSchema';
 
 interface FormatStringInputProps {
   /** Current value of the format string input */
@@ -29,8 +30,25 @@ export default function FormatStringInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const braceStartRef = useRef<number>(-1);
+  const [schemaPlaceholders, setSchemaPlaceholders] = useState<FormatPlaceholder[]>([]);
 
-  const placeholders = getFormatPlaceholders(moduleType);
+  useEffect(() => {
+    let active = true;
+    loadFastfetchSchema().then((schema) => {
+      if (!active) return;
+      const moduleSchema = findModuleSchema(schema, moduleType);
+      const formatNode = moduleSchema?.properties?.format;
+      const description = formatNode ? resolveSchemaRef(schema, formatNode).description || '' : '';
+      const names = [...description.matchAll(/\{([^}]+)\}/g)]
+        .map((match) => match[1])
+        .filter((name) => !name.startsWith('#') && !name.startsWith('?') && !name.startsWith('/'));
+      setSchemaPlaceholders([...new Set(names)].map((placeholder) => ({ placeholder, description: 'Fastfetch 2.66 format value' })));
+    }).catch(() => { if (active) setSchemaPlaceholders([]); });
+    return () => { active = false; };
+  }, [moduleType]);
+
+  const placeholders = [...getFormatPlaceholders(moduleType), ...schemaPlaceholders]
+    .filter((item, index, items) => items.findIndex((candidate) => candidate.placeholder === item.placeholder) === index);
   const hasPlaceholders = placeholders.length > 0;
 
   /**

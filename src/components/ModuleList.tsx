@@ -29,7 +29,7 @@ const ALL_MODULE_TYPES: ModuleType[] = [
   'battery', 'poweradapter', 'player', 'media', 'localip', 'publicip',
   'wifi', 'datetime', 'locale', 'vulkan', 'opengl', 'opencl', 'users',
   'bluetooth', 'sound', 'gamepad', 'weather', 'netio', 'diskio',
-  'physicaldisk', 'version', 'break', 'colors', 'command',
+  'physicaldisk', 'version', 'break', 'colors', 'command', 'file', 'codec',
   'bios', 'bluetoothradio', 'board', 'bootmgr', 'brightness', 'btrfs',
   'camera', 'chassis', 'cpucache', 'cpuusage', 'custom', 'dns',
   'editor', 'initsystem', 'keyboard', 'lm', 'loadavg', 'logo',
