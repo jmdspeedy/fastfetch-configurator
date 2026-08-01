@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import { assessPreviewSupport, PreviewSupport } from '@/utils/previewCompatibility';
 
 export type ModuleType =
   | 'title' | 'separator' | 'os' | 'host' | 'kernel' | 'uptime' | 'packages' | 'shell'
@@ -77,11 +78,14 @@ interface ConfigState {
   reorderModules: (newOrder: ModuleConfig[]) => void;
   updateLogo: (updates: Partial<LogoConfig>) => void;
   setPresetLogo: (name: string) => void;
+  setAutoLogo: () => void;
   setCustomLogo: (content: string) => void;
   updateDisplay: (updates: Partial<DisplayConfig>) => void;
   updateGeneral: (updates: Record<string, unknown>) => void;
   resetConfig: () => void;
   loadConfig: (json: string) => void;
+  previewSupport: PreviewSupport;
+  loadError: string | null;
 }
 
 // Default Modules (mimicking default fastfetch)
@@ -121,7 +125,6 @@ export const useConfigStore = create<ConfigState>((set) => ({
   logo: {
     type: 'auto',
     padding: { top: 2, left: 2 },
-    _presetName: 'arch'
   },
   display: {
     separator: '  ->  ',
@@ -131,6 +134,8 @@ export const useConfigStore = create<ConfigState>((set) => ({
     }
   },
   general: {},
+  previewSupport: { supported: true, features: [] },
+  loadError: null,
 
   addModule: (type) => set((state) => ({
     modules: [...state.modules, { id: uuidv4(), type }]
@@ -153,11 +158,21 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setPresetLogo: (name) => set((state) => ({
     logo: {
       ...state.logo,
-      type: 'auto', // Reset to auto/builtin for presets
-      source: undefined,
+      type: 'builtin',
+      source: name,
       _presetName: name,
       _customContent: undefined
     }
+  })),
+
+  setAutoLogo: () => set((state) => ({
+    logo: {
+      ...state.logo,
+      type: 'auto',
+      source: undefined,
+      _presetName: undefined,
+      _customContent: undefined,
+    },
   })),
 
   setCustomLogo: (content) => set((state) => ({
@@ -180,9 +195,11 @@ export const useConfigStore = create<ConfigState>((set) => ({
 
   resetConfig: () => set({
     modules: defaultModules,
-    logo: { type: 'auto', padding: { top: 2, left: 2 }, _presetName: 'arch' },
+    logo: { type: 'auto', padding: { top: 2, left: 2 } },
     display: { separator: '  ->  ', color: { keys: 'blue', title: 'blue' } },
-    general: {}
+    general: {},
+    previewSupport: { supported: true, features: [] },
+    loadError: null,
   }),
 
   loadConfig: (json) => {
@@ -262,22 +279,30 @@ export const useConfigStore = create<ConfigState>((set) => ({
       const parsed = JSON.parse(noTrailingCommas);
       // Basic validation/migration logic would be needed here
       // For now, just a direct set if structure matches
-      set({
-        logo: parsed.logo === null ? { type: 'none' } : (parsed.logo || { type: 'auto', _presetName: 'arch' }),
-        display: parsed.display || {},
-        general: parsed.general || {},
-        modules: parsed.modules?.map((m: string | ModuleConfig) => {
+      const nextLogo = parsed.logo === null ? { type: 'none' as const } : (parsed.logo || { type: 'auto' as const });
+      const nextDisplay = parsed.display || {};
+      const nextGeneral = parsed.general || {};
+      const nextModules = parsed.modules?.map((m: string | ModuleConfig) => {
           if (typeof m === 'string') {
             // Simple string module like "title" — normalize to lowercase
             return { id: uuidv4(), type: m.toLowerCase() };
           } else {
             // Object module with additional properties — normalize type to lowercase
-            return { ...m, id: uuidv4(), type: m.type.toLowerCase() };
+            return { ...m, id: uuidv4(), type: String(m.type || 'custom').toLowerCase() };
           }
-        }) || defaultModules
+        }) || defaultModules;
+      set({
+        logo: nextLogo,
+        display: nextDisplay,
+        general: nextGeneral,
+        modules: nextModules,
+        previewSupport: assessPreviewSupport(nextModules, nextLogo, nextDisplay, nextGeneral),
+        loadError: null,
       });
     } catch (e) {
+      const message = e instanceof Error ? e.message : 'Invalid Fastfetch configuration';
       console.error("Failed to load config", e);
+      set({ loadError: message });
     }
   }
 }));

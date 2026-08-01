@@ -26,15 +26,8 @@ const ALL_MODULE_TYPES: ModuleType[] = [
   'title', 'separator', 'os', 'host', 'kernel', 'uptime', 'packages', 'shell',
   'display', 'de', 'wm', 'wmtheme', 'theme', 'icons', 'font', 'cursor',
   'terminal', 'terminalfont', 'cpu', 'gpu', 'memory', 'swap', 'disk',
-  'battery', 'poweradapter', 'player', 'media', 'localip', 'publicip',
-  'wifi', 'datetime', 'locale', 'vulkan', 'opengl', 'opencl', 'users',
-  'bluetooth', 'sound', 'gamepad', 'weather', 'netio', 'diskio',
-  'physicaldisk', 'version', 'break', 'colors', 'command', 'file', 'codec',
-  'bios', 'bluetoothradio', 'board', 'bootmgr', 'brightness', 'btrfs',
-  'camera', 'chassis', 'cpucache', 'cpuusage', 'custom', 'dns',
-  'editor', 'initsystem', 'keyboard', 'lm', 'loadavg', 'logo',
-  'monitor', 'mouse', 'physicalmemory', 'processes', 'terminalsize',
-  'terminaltheme', 'tpm', 'wallpaper', 'zpool'
+  'battery', 'poweradapter', 'localip', 'publicip', 'wifi', 'datetime', 'users',
+  'version', 'break', 'colors', 'custom'
 ];
 
 function SortableItem({ id, type, onDelete, onEdit }: { id: string; type: string; onDelete: () => void; onEdit: () => void }) {

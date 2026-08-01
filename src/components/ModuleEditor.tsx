@@ -1,11 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useConfigStore, ModuleConfig } from '@/store/config';
 import { X, Check } from 'lucide-react';
 import ColorPicker from './ColorPicker';
-import FormatStringInput from './FormatStringInput';
-import SchemaFields from './SchemaFields';
-import { FastfetchSchemaDocument, FastfetchSchemaNode, findModuleSchema, loadFastfetchSchema } from '@/utils/fastfetchSchema';
 
 interface ModuleEditorProps {
     moduleId: string;
@@ -22,22 +19,6 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
     const [localConfig, setLocalConfig] = useState<ModuleConfig | null>(
         moduleData ? { ...moduleData } : null
     );
-    const [schema, setSchema] = useState<FastfetchSchemaDocument | null>(null);
-    const [schemaNode, setSchemaNode] = useState<FastfetchSchemaNode | null>(null);
-    const [schemaError, setSchemaError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let active = true;
-        loadFastfetchSchema().then((document) => {
-            if (!active) return;
-            setSchema(document);
-            setSchemaNode(findModuleSchema(document, moduleData?.type || '') || null);
-        }).catch((error: unknown) => {
-            if (active) setSchemaError(error instanceof Error ? error.message : 'Unable to load Fastfetch schema');
-        });
-        return () => { active = false; };
-    }, [moduleData?.type]);
-
     if (!moduleData || !localConfig) return null;
 
     // Normalize type for case-insensitive comparisons (fastfetch accepts both 'Custom' and 'custom')
@@ -83,38 +64,7 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                         </div>
                     )}
 
-                    {/* Specific Fields per Type */}
-                    {normalizedType === 'command' && (
-                        <div>
-                            <label className="text-xs text-blue-400 mb-1 block font-bold">Shell Command</label>
-                            <textarea
-                                value={localConfig.text || ''}
-                                onChange={(e) => handleChange('text', e.target.value)}
-                                placeholder='echo "Hello World"'
-                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm font-mono rounded-md p-2 h-24 focus:outline-none focus:border-blue-500 placeholder-gray-600 resize-none custom-scrollbar"
-                            />
-                            <p className="text-[10px] text-gray-500 mt-1">
-                                Command to execute. Output will be displayed.
-                            </p>
-                        </div>
-                    )}
-
-                    {normalizedType === 'file' && (
-                        <div>
-                            <label className="text-xs text-blue-400 mb-1 block font-bold">File Path</label>
-                            <input
-                                type="text"
-                                value={localConfig.source || ''}
-                                onChange={(e) => handleChange('source', e.target.value)}
-                                placeholder="/path/to/file.txt"
-                                className="w-full bg-gray-900 border border-gray-700 text-gray-200 text-sm font-mono rounded-md p-2 focus:outline-none focus:border-blue-500 placeholder-gray-600"
-                            />
-                            <p className="text-[10px] text-gray-500 mt-1">
-                                Absolute path to the file content to display.
-                            </p>
-                        </div>
-                    )}
-
+                    {/* Specific field for intentionally simple text modules */}
                     {(normalizedType === 'custom' || normalizedType === 'text') && (
                         <div>
                             <label className="text-xs text-blue-400 mb-1 block font-bold">Display Text</label>
@@ -128,15 +78,9 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                         </div>
                     )}
 
-                    {/* Common Field: Format */}
-                    <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Format String</label>
-                        <FormatStringInput
-                            value={localConfig.format || ''}
-                            onChange={(val) => handleChange('format', val)}
-                            moduleType={moduleData.type}
-                        />
-                    </div>
+                    <p className="text-[10px] text-gray-500 border-t border-gray-800 pt-3">
+                        Advanced Fastfetch fields stay preserved in imported and remote configurations. This editor only exposes parity-verified labels and colors.
+                    </p>
 
                     {/* Colors */}
                     <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-800">
@@ -152,15 +96,6 @@ export default function ModuleEditor({ moduleId, onClose }: ModuleEditorProps) {
                         />
                     </div>
 
-                    {schema && schemaNode && (
-                        <SchemaFields
-                            schema={schema}
-                            node={schemaNode}
-                            value={localConfig as unknown as Record<string, unknown>}
-                            onChange={(next) => setLocalConfig(next as ModuleConfig)}
-                        />
-                    )}
-                    {schemaError && <p className="text-[10px] text-amber-300 border-t border-gray-800 pt-3">Advanced schema controls unavailable: {schemaError}</p>}
                 </div>
 
                 {/* Footer */}

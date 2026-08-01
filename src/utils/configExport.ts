@@ -21,7 +21,7 @@ export const buildConfigDocument = (
             ...logo,
             _presetName: undefined,
             _customContent: undefined,
-            source: logo.type === 'none' ? undefined : (logo.source || logo._presetName),
+            source: logo.type === 'none' || logo.type === 'auto' ? undefined : (logo.source || logo._presetName),
         }).filter(([, value]) => value !== undefined));
 
     return {

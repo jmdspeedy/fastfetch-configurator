@@ -3,18 +3,7 @@
 import { useConfigStore } from '@/store/config';
 import { FileCode, Loader2, RefreshCw, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-interface Template {
-    name: string;
-    download_url: string;
-    category: 'preset' | 'example';
-}
-
-interface GitHubContentItem {
-    name: string;
-    download_url: string;
-    type: string;
-}
+import { fetchRemoteTemplateCatalog, RemoteTemplate } from '@/utils/templateCatalog';
 
 interface TemplateModalProps {
     isOpen: boolean;
@@ -23,7 +12,7 @@ interface TemplateModalProps {
 
 export default function TemplateModal({ isOpen, onClose }: TemplateModalProps) {
     const { loadConfig, resetConfig } = useConfigStore();
-    const [templates, setTemplates] = useState<Template[]>([]);
+    const [templates, setTemplates] = useState<RemoteTemplate[]>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
     const [templateError, setTemplateError] = useState<string | null>(null);
 
@@ -31,36 +20,7 @@ export default function TemplateModal({ isOpen, onClose }: TemplateModalProps) {
         setIsLoadingTemplates(true);
         setTemplateError(null);
         try {
-            const [presetsRes, examplesRes] = await Promise.all([
-                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets?ref=2.66.0'),
-                fetch('https://api.github.com/repos/fastfetch-cli/fastfetch/contents/presets/examples?ref=2.66.0'),
-            ]);
-
-            if (!presetsRes.ok || !examplesRes.ok) throw new Error('Failed to fetch templates');
-
-            const [presetsData, examplesData]: [GitHubContentItem[], GitHubContentItem[]] = await Promise.all([
-                presetsRes.json(),
-                examplesRes.json(),
-            ]);
-
-            const isJsonFile = (item: GitHubContentItem) =>
-                item.type === 'file' && (item.name.endsWith('.jsonc') || item.name.endsWith('.json'));
-
-            const presetTemplates: Template[] = presetsData
-                .filter(isJsonFile)
-                .map((item) => ({ name: item.name, download_url: item.download_url, category: 'preset' as const }))
-                .sort((a, b) => a.name.localeCompare(b.name));
-
-            const exampleTemplates: Template[] = examplesData
-                .filter(isJsonFile)
-                .map((item) => ({ name: item.name, download_url: item.download_url, category: 'example' as const }))
-                .sort((a, b) => {
-                    const numA = parseInt(a.name);
-                    const numB = parseInt(b.name);
-                    return numA - numB;
-                });
-
-            setTemplates([...presetTemplates, ...exampleTemplates]);
+            setTemplates(await fetchRemoteTemplateCatalog());
         } catch (err) {
             setTemplateError("Failed to load templates. Please try again.");
             console.error(err);
@@ -69,7 +29,7 @@ export default function TemplateModal({ isOpen, onClose }: TemplateModalProps) {
         }
     };
 
-    const handleSelectTemplate = async (template: Template) => {
+    const handleSelectTemplate = async (template: RemoteTemplate) => {
         setIsLoadingTemplates(true);
         setTemplateError(null);
         try {

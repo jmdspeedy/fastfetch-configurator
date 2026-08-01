@@ -11,12 +11,18 @@ export interface PreviewProfile {
   id: PreviewPlatform;
   label: string;
   architecture: string;
+  username?: string;
+  hostname?: string;
+  distribution?: string;
+  logoName?: string;
+  homeDirectory?: string;
   values: Record<string, Record<string, string> | Record<string, string>[]>;
   succeeded?: Record<string, boolean | boolean[]>;
   source?: 'sample' | 'capture';
 }
 
 const linuxValues: Record<string, Record<string, string>> = {
+  title: { 'user-name': 'user', 'host-name': 'archbox', 'full-user-name': 'Sample User' },
   os: { sysname: 'Linux', name: 'Arch Linux', 'pretty-name': 'Arch Linux', arch: 'x86_64', version: '' },
   host: { family: 'Desktop', name: 'KVM/QEMU', version: 'Standard PC', vendor: 'QEMU' },
   kernel: { sysname: 'Linux', release: '6.6.13', version: '#1 SMP', arch: 'x86_64', 'display-version': '6.6.13-linux' },
@@ -89,7 +95,18 @@ const linuxValues: Record<string, Record<string, string>> = {
 
 const windowsValues: Record<string, Record<string, string>> = {
   ...linuxValues,
+  title: { 'user-name': 'user', 'host-name': 'WIN-SAMPLE', 'full-user-name': 'Sample User' },
   os: { sysname: 'Windows', name: 'Windows', 'pretty-name': 'Windows 11 Pro', arch: 'x86_64' },
+  host: { family: 'Laptop', name: 'Surface Laptop 7', version: 'Snapdragon X Elite', vendor: 'Microsoft' },
+  kernel: { sysname: 'WIN32_NT', release: '10.0.26100', version: 'Windows NT', arch: 'x86_64' },
+  cpu: { name: 'Qualcomm Snapdragon X Elite', vendor: 'Qualcomm', 'cores-physical': '12', 'cores-logical': '12', 'freq-max': '4.01 GHz' },
+  gpu: { vendor: 'Qualcomm', name: 'Adreno X1-85', driver: 'WDDM' },
+  disk: { 'size-used': '92.0 GiB', 'size-total': '512 GiB', 'size-percentage': '18', filesystem: 'NTFS', name: 'C:', mountpoint: 'C:\\' },
+  localip: { ipv4: '192.0.2.45', ifname: 'Wi-Fi' },
+  publicip: { ip: '198.51.100.45', location: 'Sample, US' },
+  wifi: { ssid: 'SampleNet', status: 'Connected', 'signal-quality': '88' },
+  battery: { capacity: '87', status: 'Discharging', manufacturer: 'Microsoft' },
+  poweradapter: { watts: '65', name: 'USB-C AC Adapter', manufacturer: 'Microsoft' },
   shell: { 'process-name': 'PowerShell', 'pretty-name': 'PowerShell', version: '7.5.0', 'exe-name': 'pwsh' },
   de: { 'pretty-name': 'Windows', version: '11' },
   wm: { 'pretty-name': 'DWM', version: '' },
@@ -99,9 +116,18 @@ const windowsValues: Record<string, Record<string, string>> = {
 
 const macosValues: Record<string, Record<string, string>> = {
   ...linuxValues,
+  title: { 'user-name': 'user', 'host-name': 'macbook-pro', 'full-user-name': 'Sample User' },
   os: { sysname: 'Darwin', name: 'macOS', 'pretty-name': 'macOS 15.5', arch: 'arm64' },
   host: { family: 'Mac', name: 'MacBook Pro', version: 'Apple Silicon', vendor: 'Apple' },
   kernel: { sysname: 'Darwin', release: '24.5.0', version: 'Darwin Kernel Version', arch: 'arm64', 'display-version': '24.5.0' },
+  cpu: { name: 'Apple M3 Pro', vendor: 'Apple', 'cores-physical': '12', 'cores-logical': '12', 'freq-max': '4.06 GHz' },
+  gpu: { vendor: 'Apple', name: 'Apple M3 Pro integrated graphics', driver: 'Metal' },
+  disk: { 'size-used': '118 GiB', 'size-total': '1.00 TiB', 'size-percentage': '12', filesystem: 'APFS', name: 'Macintosh HD', mountpoint: '/' },
+  display: { width: '3024', height: '1964', 'refresh-rate': '120', 'scaled-width': '1800', 'scaled-height': '1169', name: 'Built-in Liquid Retina XDR', type: 'Built-in' },
+  localip: { ipv4: '192.0.2.62', ifname: 'en0' },
+  publicip: { ip: '198.51.100.62', location: 'Sample, US' },
+  wifi: { ssid: 'SampleNet', status: 'Connected', 'signal-quality': '91' },
+  battery: { capacity: '94', status: 'Charging', manufacturer: 'Apple' },
   shell: { 'process-name': 'zsh', 'pretty-name': 'Zsh', version: '5.9', 'exe-name': 'zsh' },
   de: { 'pretty-name': 'Aqua', version: '' },
   wm: { 'pretty-name': 'Quartz Compositor', version: '' },
@@ -109,10 +135,33 @@ const macosValues: Record<string, Record<string, string>> = {
   terminalfont: { combined: 'SF Mono (12pt)', name: 'SF Mono', size: '12pt' },
 };
 
+const kaliValues: Record<string, Record<string, string>> = {
+  ...linuxValues,
+  title: { 'user-name': 'kali', 'host-name': 'kali-laptop', 'full-user-name': 'Kali User' },
+  os: { ...linuxValues.os, name: 'Kali GNU/Linux', 'pretty-name': 'Kali GNU/Linux Rolling' },
+  host: { family: 'Laptop', name: 'Framework Laptop 13', version: 'AMD Ryzen Edition', vendor: 'Framework' },
+  shell: { 'process-name': 'zsh', 'pretty-name': 'Zsh', version: '5.9', 'exe-name': 'zsh' },
+  terminal: { 'pretty-name': 'Konsole', version: '24.05', 'process-name': 'konsole' },
+  de: { 'pretty-name': 'KDE Plasma', version: '6.1', 'process-name': 'plasmashell' },
+  wm: { 'pretty-name': 'KWin', version: '6.1', 'process-name': 'kwin_wayland' },
+  wallpaper: { 'file-name': 'kali.png', 'full-path': '/usr/share/backgrounds/kali.png' },
+};
+
 export const previewProfiles: Record<PreviewPlatform, PreviewProfile> = {
-  linux: { id: 'linux', label: 'Linux', architecture: 'x86_64', values: linuxValues, source: 'sample' },
-  windows: { id: 'windows', label: 'Windows', architecture: 'x86_64', values: windowsValues, source: 'sample' },
-  macos: { id: 'macos', label: 'macOS', architecture: 'arm64', values: macosValues, source: 'sample' },
+  linux: { id: 'linux', label: 'Linux · Arch sample', architecture: 'x86_64', distribution: 'Arch Linux', logoName: 'Arch', homeDirectory: '/home/user', values: linuxValues, source: 'sample' },
+  windows: { id: 'windows', label: 'Windows', architecture: 'x86_64', distribution: 'Windows 11', logoName: 'Windows', homeDirectory: 'C:\\Users\\user', values: windowsValues, source: 'sample' },
+  macos: { id: 'macos', label: 'macOS', architecture: 'arm64', distribution: 'macOS', logoName: 'MacOS', homeDirectory: '/Users/user', values: macosValues, source: 'sample' },
+};
+
+export const kaliPreviewProfile: PreviewProfile = {
+  id: 'linux',
+  label: 'Linux · Kali sample',
+  architecture: 'x86_64',
+  distribution: 'Kali GNU/Linux',
+  logoName: 'Kali',
+  homeDirectory: '/home/kali',
+  values: kaliValues,
+  source: 'sample',
 };
 
 export const defaultPreviewProfile = previewProfiles.linux;

@@ -1,11 +1,14 @@
 import { getFormatPlaceholders, getDummyValues } from '@/data/moduleFormatStrings';
 import { defaultPreviewProfile, PreviewProfile } from '@/data/previewProfiles';
 import { DisplayConfig, LogoConfig, ModuleConfig } from '@/store/config';
+import { stripTerminalControls } from '@/utils/terminalBuffer';
 
 export interface PreviewSegment {
   text: string;
   color?: string;
+  background?: string;
   bold?: boolean;
+  dim?: boolean;
   italic?: boolean;
   underline?: boolean;
 }
@@ -35,6 +38,8 @@ export interface PreviewModel {
   profile: PreviewProfile;
   lines: PreviewLine[];
   diagnostics: PreviewDiagnostic[];
+  terminalStream: string;
+  unsupportedFeatures: string[];
 }
 
 type ColorConfig = DisplayConfig['color'];
@@ -514,7 +519,7 @@ function evaluateConditions(module: ModuleConfig, profile: PreviewProfile): bool
   return true;
 }
 
-function replaceFormatTokens(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, diagnostics: PreviewDiagnostic[], moduleId: string): string {
+function replaceFormatTokens(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, general: Record<string, unknown>, diagnostics: PreviewDiagnostic[], moduleId: string): string {
   let source = format.replace(/\{\{/g, '\u0000').replace(/\}\}/g, '\u0001');
   const placeholders = getFormatPlaceholders(moduleType);
   let implicitIndex = 0;
@@ -528,9 +533,11 @@ function replaceFormatTokens(format: string, moduleType: string, values: Record<
     }
     if (name === 'succeeded') return values.succeeded || 'true';
     if (name.startsWith('$')) {
-      const constants = (display as DisplayConfig & { constants?: string[] }).constants || [];
+      const displayConstants = (display as DisplayConfig & { constants?: unknown }).constants;
+      const generalConstants = general.constants;
+      const constants = Array.isArray(displayConstants) ? displayConstants : Array.isArray(generalConstants) ? generalConstants : [];
       const constantIndex = Number(name.slice(1));
-      return Number.isFinite(constantIndex) ? constants[constantIndex] || '' : '';
+      return Number.isFinite(constantIndex) ? String(constants[constantIndex] ?? constants[Math.max(0, constantIndex - 1)] ?? '') : '';
     }
     return values[name] ?? '';
   };
@@ -601,13 +608,35 @@ function styledSegments(value: string, defaults: PreviewSegment): PreviewSegment
     push(value.slice(last, match.index));
     const codes = match[1].split(';').filter(Boolean).map(Number);
     if (codes.length === 0 || codes.includes(0)) current = { ...defaults, text: '' };
-    for (const code of codes) {
+    for (let codeIndex = 0; codeIndex < codes.length; codeIndex++) {
+      const code = codes[codeIndex];
       if (code === 1) current.bold = true;
+      if (code === 2) current.dim = true;
       if (code === 3) current.italic = true;
       if (code === 4) current.underline = true;
+      if (code === 22) { current.bold = false; current.dim = false; }
+      if (code === 23) current.italic = false;
+      if (code === 24) current.underline = false;
       if (code >= 30 && code <= 37) current.color = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'][code - 30];
       if (code >= 90 && code <= 97) current.color = ['bright_black', 'bright_red', 'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white'][code - 90];
+      if (code >= 40 && code <= 47) current.background = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'][code - 40];
+      if (code >= 100 && code <= 107) current.background = ['bright_black', 'bright_red', 'bright_green', 'bright_yellow', 'bright_blue', 'bright_magenta', 'bright_cyan', 'bright_white'][code - 100];
       if (code === 39) current.color = defaults.color;
+      if (code === 49) current.background = defaults.background;
+      if ((code === 38 || code === 48) && codes[codeIndex + 1] === 2) {
+        const rgb = codes.slice(codeIndex + 2, codeIndex + 5);
+        if (rgb.length === 3) {
+          const value = `#${rgb.map((part) => Math.max(0, Math.min(255, part)).toString(16).padStart(2, '0')).join('')}`;
+          if (code === 38) current.color = value; else current.background = value;
+        }
+        codeIndex += 4;
+      } else if ((code === 38 || code === 48) && codes[codeIndex + 1] === 5) {
+        const palette = ['#000000', '#800000', '#008000', '#808000', '#000080', '#800080', '#008080', '#c0c0c0', '#808080', '#ff0000', '#00ff00', '#ffff00', '#0000ff', '#ff00ff', '#00ffff', '#ffffff'];
+        const paletteIndex = codes[codeIndex + 2];
+        const value = paletteIndex < 16 ? palette[paletteIndex] : undefined;
+        if (value) { if (code === 38) current.color = value; else current.background = value; }
+        codeIndex += 2;
+      }
     }
     last = match.index + match[0].length;
   }
@@ -636,10 +665,10 @@ function ansiCodeForColor(color: string): string {
   return [...prefixes, brightCode].join(';');
 }
 
-function renderFormat(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, diagnostics: PreviewDiagnostic[], moduleId: string, baseColor: string): { text: string; segments: PreviewSegment[] } {
-  const resolved = replaceFormatTokens(format, moduleType, values, display, diagnostics, moduleId);
+function renderFormat(format: string, moduleType: string, values: Record<string, string>, display: DisplayConfig, general: Record<string, unknown>, diagnostics: PreviewDiagnostic[], moduleId: string, baseColor: string): { text: string; segments: PreviewSegment[] } {
+  const resolved = replaceFormatTokens(format, moduleType, values, display, general, diagnostics, moduleId);
   if (display.pipe === true) {
-    const text = trimRendered(resolved.replace(/\{#[^}]*\}/g, ''));
+    const text = trimRendered(stripTerminalControls(resolved.replace(/\{#[^}]*\}/g, '')));
     return { text, segments: text ? [{ text, color: 'default' }] : [] };
   }
   const colorized = resolved.replace(/\{#([^}]*)\}/g, (_match, color: string) => {
@@ -648,7 +677,31 @@ function renderFormat(format: string, moduleType: string, values: Record<string,
       : color;
     return `\x1b[${namedColor === '' ? '0' : ansiCodeForColor(namedColor)}m`;
   });
-  return { text: trimRendered(resolved.replace(/\{#[^}]*\}/g, '')), segments: styledSegments(colorized, { text: '', color: baseColor }) };
+  return { text: trimRendered(stripTerminalControls(resolved.replace(/\{#[^}]*\}/g, ''))), segments: styledSegments(colorized, { text: '', color: baseColor }) };
+}
+
+function segmentAnsi(segment: PreviewSegment): string {
+  const codes: string[] = [];
+  if (segment.bold) codes.push('1');
+  if (segment.dim) codes.push('2');
+  if (segment.italic) codes.push('3');
+  if (segment.underline) codes.push('4');
+  if (segment.color) codes.push(ansiCodeForColor(segment.color));
+  if (segment.background) codes.push(ansiCodeForColor(segment.background).replace(/^38/, '48'));
+  return codes.length > 0 ? `\x1b[0;${codes.join(';')}m` : '\x1b[0m';
+}
+
+function linesToTerminalStream(lines: PreviewLine[]): string {
+  return lines.map((line) => {
+    if (line.kind === 'break') return '';
+    if (line.kind === 'colors') {
+      return (line.colorBlocks || []).map((block) => {
+        const rgb = /^#([0-9a-f]{6})$/i.exec(block.background);
+        return `${rgb ? `\x1b[48;2;${parseInt(rgb[1].slice(0, 2), 16)};${parseInt(rgb[1].slice(2, 4), 16)};${parseInt(rgb[1].slice(4, 6), 16)}m` : ''}${block.text}\x1b[0m`;
+      }).join('');
+    }
+    return line.segments.map((segment) => `${segmentAnsi(segment)}${segment.text}`).join('');
+  }).join('\n');
 }
 
 export function buildPreviewModel(
@@ -656,16 +709,22 @@ export function buildPreviewModel(
   logo: LogoConfig,
   display: DisplayConfig,
   profile: PreviewProfile = defaultPreviewProfile,
+  general: Record<string, unknown> = {},
 ): PreviewModel {
   const diagnostics: PreviewDiagnostic[] = [];
+  const unsupportedFeatures: string[] = [];
   if (!profile.label.toLowerCase().includes('capture')) {
     diagnostics.push({ level: 'info', message: `Deterministic ${profile.label} sample; load a native Fastfetch JSON capture for host-exact values` });
   }
-  if (['sixel', 'kitty', 'kitty-direct', 'kitty-icat', 'iterm', 'chafa'].includes(String(logo.type))) {
-    diagnostics.push({ level: 'warning', message: `${logo.type} logo protocol is terminal-specific and cannot be rasterized by the browser preview` });
+  if (['sixel', 'kitty', 'kitty-direct', 'kitty-icat', 'iterm', 'chafa'].includes(String(logo.type)) && !logo._customContent) {
+    const message = `${logo.type} logo protocol requires a native terminal or loaded capture`;
+    diagnostics.push({ level: 'error', message });
+    unsupportedFeatures.push(message);
   }
   if (['command-raw', 'file-raw', 'raw'].includes(String(logo.type)) && !logo._customContent) {
-    diagnostics.push({ level: 'warning', message: 'Raw logo source is not available in the browser; load the logo text or a native capture' });
+    const message = 'Raw logo source is not available in the browser; load the logo text or a native capture';
+    diagnostics.push({ level: 'error', message });
+    unsupportedFeatures.push(message);
   }
   const keyColor = display.pipe === true ? 'default' : displayColor(display.color, 'keys', 'blue');
   const titleColor = display.pipe === true ? 'default' : displayColor(display.color, 'title', keyColor);
@@ -700,7 +759,7 @@ export function buildPreviewModel(
     }
     if (type === 'title') {
       const titleValues = { 'user-name': 'user', 'host-name': 'hostname', 'user-name-colored': 'user', 'at-symbol-colored': '@', 'host-name-colored': 'hostname' };
-      const rendered = renderFormat(moduleConfig.format || '{user-name}@{host-name}', type, { ...titleValues, ...values }, display, diagnostics, moduleConfig.id, titleColor);
+      const rendered = renderFormat(moduleConfig.format || '{user-name}@{host-name}', type, { ...titleValues, ...values }, display, general, diagnostics, moduleConfig.id, titleColor);
       lines.push({ id: moduleConfig.id, kind: 'title', moduleType: type, output: rendered.text || 'user@hostname', segments: rendered.segments, outputColor: titleColor });
       continue;
     }
@@ -711,14 +770,14 @@ export function buildPreviewModel(
       const separatorTimes = typeof moduleConfig.times === 'number' && moduleConfig.times > 0 ? moduleConfig.times : titleLength;
       const separatorText = separatorString.repeat(separatorTimes).slice(0, typeof moduleConfig.times === 'number' && moduleConfig.times > 0 ? undefined : titleLength);
       const rendered = moduleConfig.format
-        ? renderFormat(moduleConfig.format, type, values, display, diagnostics, moduleConfig.id, separatorColor)
+        ? renderFormat(moduleConfig.format, type, values, display, general, diagnostics, moduleConfig.id, separatorColor)
         : { text: separatorText, segments: [{ text: separatorText, color: moduleColor(moduleConfig.outputColor, separatorColor) }] };
       lines.push({ id: moduleConfig.id, kind: 'separator', moduleType: type, output: rendered.text, segments: rendered.segments, outputColor: separatorColor });
       continue;
     }
     if (type === 'custom' || type === 'text') {
       const customOutputColor = moduleColor(moduleConfig.outputColor, outputColor);
-      const rendered = renderFormat(moduleConfig.format || moduleConfig.key || 'Custom Text', type, values, display, diagnostics, moduleConfig.id, customOutputColor);
+      const rendered = renderFormat(moduleConfig.format || moduleConfig.key || 'Custom Text', type, values, display, general, diagnostics, moduleConfig.id, customOutputColor);
       lines.push({ id: moduleConfig.id, kind: 'custom', moduleType: type, output: rendered.text, segments: rendered.segments, outputColor: customOutputColor });
       continue;
     }
@@ -728,6 +787,11 @@ export function buildPreviewModel(
     const key = moduleConfig.key ?? LABELS[type] ?? moduleConfig.type;
     const hasExplicitFormat = typeof moduleConfig.format === 'string' && moduleConfig.format.length > 0;
     const format = moduleConfig.format || DEFAULT_FORMATS[type] || '{result}';
+    if (!DEFAULT_FORMATS[type] && !moduleConfig.format && !['command', 'file'].includes(type)) {
+      const message = `Module type "${moduleConfig.type}" is outside the verified browser preview surface`;
+      diagnostics.push({ level: 'error', message, moduleId: moduleConfig.id });
+      unsupportedFeatures.push(message);
+    }
     const keyType = display.key?.type;
     const moduleKeyWidth = typeof moduleConfig.keyWidth === 'number' ? moduleConfig.keyWidth : globalKeyWidth;
     const icon = String(moduleConfig.keyIcon || KEY_ICONS[type] || '◆');
@@ -791,7 +855,7 @@ export function buildPreviewModel(
       if (nativeDefault === null) return;
       const rendered = nativeDefault !== undefined
         ? { text: trimRendered(nativeDefault), segments: [{ text: trimRendered(nativeDefault), color: lineOutputColor }] }
-        : renderFormat(format, type, valueSet, display, diagnostics, moduleConfig.id, lineOutputColor);
+        : renderFormat(format, type, valueSet, display, general, diagnostics, moduleConfig.id, lineOutputColor);
       lines.push({
         id: `${moduleConfig.id}-${resultIndex}`, kind: 'module', moduleType: type, key: linePaddedKey, separator, output: rendered.text,
         segments: [...lineKeySegments, ...lineSeparatorSegments, ...rendered.segments], keyColor: lineKeyColor,
@@ -799,7 +863,7 @@ export function buildPreviewModel(
       });
     });
   }
-  return { profile, lines, diagnostics };
+  return { profile, lines, diagnostics, terminalStream: linesToTerminalStream(lines), unsupportedFeatures: [...new Set(unsupportedFeatures)] };
 }
 
 export const previewLabels = LABELS;

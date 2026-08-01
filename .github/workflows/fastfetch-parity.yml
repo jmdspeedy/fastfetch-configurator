@@ -55,4 +55,5 @@ jobs:
         shell: bash
         env:
           FASTFETCH_BIN: ${{ github.workspace }}/${{ matrix.binary }}
+          FASTFETCH_PARITY_REQUIRED: '1'
         run: npm test

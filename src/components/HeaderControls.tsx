@@ -1,11 +1,12 @@
 'use client';
 
 import { useConfigStore } from '@/store/config';
-import { Download, RotateCcw, FileCode, Upload } from 'lucide-react';
+import { Download, RotateCcw, FileCode, Upload, Braces } from 'lucide-react';
 import { useState } from 'react';
 import TemplateModal from '@/components/modals/TemplateModal';
 import ImportModal from '@/components/modals/ImportModal';
 import DeployModal from '@/components/modals/DeployModal';
+import JsonPreview from '@/components/JsonPreview';
 
 export default function HeaderControls() {
   const { resetConfig } = useConfigStore();
@@ -13,6 +14,7 @@ export default function HeaderControls() {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showJsonPreview, setShowJsonPreview] = useState(false);
 
   return (
     <div className="flex items-center gap-3">
@@ -45,6 +47,15 @@ export default function HeaderControls() {
         <span>Deploy Config</span>
       </button>
 
+      <button
+        onClick={() => setShowJsonPreview(true)}
+        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
+        title="View generated config"
+      >
+        <Braces size={16} />
+        <span className="hidden sm:inline">View config</span>
+      </button>
+
       <button onClick={() => confirm('Reset all settings?') && resetConfig()} className="p-2 text-gray-500 hover:text-red-400">
         <RotateCcw size={18} />
       </button>
@@ -63,6 +74,8 @@ export default function HeaderControls() {
         isOpen={showDeployModal}
         onClose={() => setShowDeployModal(false)}
       />
+
+      {showJsonPreview && <JsonPreview onClose={() => setShowJsonPreview(false)} />}
     </div>
   );
 }

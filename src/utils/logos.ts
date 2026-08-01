@@ -1,4 +1,6 @@
 import { allLogos, LogoDefinition } from '../data/allLogos';
+import { PreviewProfile } from '@/data/previewProfiles';
+import { LogoConfig } from '@/store/config';
 
 export const commonLogos = [
   "Arch",
@@ -66,4 +68,11 @@ export const getLogoColor = (name: string): string => {
     return data.colors[0]; // Return primary color
   }
   return 'text-gray-200';
+};
+
+/** Resolve Fastfetch's automatic logo against the active deterministic profile. */
+export const resolvePreviewLogoName = (logo: LogoConfig, profile: PreviewProfile): string | undefined => {
+  if (logo.type === 'none') return undefined;
+  if (logo.type === 'auto') return profile.logoName || profile.distribution || (profile.id === 'macos' ? 'macOS' : profile.id === 'windows' ? 'Windows 11' : 'Linux');
+  return logo.source || logo._presetName;
 };

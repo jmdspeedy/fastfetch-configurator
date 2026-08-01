@@ -4,17 +4,13 @@ import { useConfigStore } from '@/store/config';
 import { commonLogos } from '@/utils/logos';
 import { allLogos } from '@/data/allLogos';
 import { convertImageToAscii } from '@/utils/ascii';
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Upload, Image as ImageIcon, Search } from 'lucide-react';
 
 import ColorPicker from './ColorPicker';
-import SchemaFields from './SchemaFields';
-import { FastfetchSchemaDocument, loadFastfetchSchema } from '@/utils/fastfetchSchema';
 
 export default function AppearanceControls() {
-  const { logo, setPresetLogo, setCustomLogo, display, updateDisplay, general, updateGeneral } = useConfigStore();
-  const [schema, setSchema] = useState<FastfetchSchemaDocument | null>(null);
-  useEffect(() => { loadFastfetchSchema().then(setSchema).catch(() => setSchema(null)); }, []);
+  const { logo, setPresetLogo, setAutoLogo, setCustomLogo, display, updateDisplay } = useConfigStore();
   const displayColors = typeof display.color === 'object' && display.color ? display.color : {};
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -58,6 +54,13 @@ export default function AppearanceControls() {
       {/* Logo Section */}
       <div>
         <h2 className="text-sm uppercase tracking-wider text-gray-500 mb-3">Logo</h2>
+
+        <button
+          onClick={setAutoLogo}
+          className={`w-full mb-3 p-2 text-xs font-mono rounded border transition-colors ${logo.type === 'auto' && !logo._customContent ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'}`}
+        >
+          Automatic · match sample platform
+        </button>
 
         {/* Toggle Mode */}
         <div className="flex gap-2 mb-3 bg-gray-900 p-1 rounded-md">
@@ -200,24 +203,6 @@ export default function AppearanceControls() {
           </div>
         </div>
       </div>
-
-      {schema?.properties?.display && (
-        <SchemaFields
-          schema={schema}
-          node={schema.properties.display}
-          value={display as unknown as Record<string, unknown>}
-          omit={['color', 'separator']}
-          onChange={(next) => updateDisplay(next)}
-        />
-      )}
-      {schema?.properties?.general && (
-        <SchemaFields
-          schema={schema}
-          node={schema.properties.general}
-          value={general}
-          onChange={updateGeneral}
-        />
-      )}
 
     </div>
   );
