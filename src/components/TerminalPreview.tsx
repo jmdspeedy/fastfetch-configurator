@@ -33,6 +33,10 @@ function cellStyle(cell: TerminalCell): React.CSSProperties {
   };
 }
 
+function cellClassName(cell: TerminalCell): string | undefined {
+  return /[\uE000-\uF8FF]/u.test(cell.char) ? 'terminal-symbol' : undefined;
+}
+
 function logoColorToAnsi(value: string): string {
   const normalized = value.replace(/^text-/, '').replace(/-(\d{2,3})$/, '');
   const color = normalized === 'gray' ? 'white' : normalized;
@@ -152,7 +156,7 @@ export default function TerminalPreview() {
         ) : (
           <div className="leading-[1.35] whitespace-pre" style={{ width: `${terminalColumns}ch`, minWidth: `${terminalColumns}ch` }} role="img" aria-label={`${activeProfile.label} Fastfetch terminal preview`}>
             {terminal.cells.map((row, rowIndex) => (
-              <div key={rowIndex} className="h-[1.35em]">{row.map((cell, columnIndex) => <span key={`${rowIndex}-${columnIndex}`} style={cellStyle(cell)}>{cell.char}</span>)}</div>
+              <div key={rowIndex} className="h-[1.35em]">{row.map((cell, columnIndex) => <span key={`${rowIndex}-${columnIndex}`} className={cellClassName(cell)} style={cellStyle(cell)}>{cell.char}</span>)}</div>
             ))}
           </div>
         )}
