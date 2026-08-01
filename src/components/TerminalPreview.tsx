@@ -34,7 +34,11 @@ function cellStyle(cell: TerminalCell): React.CSSProperties {
 }
 
 function cellClassName(cell: TerminalCell): string | undefined {
-  return /[\uE000-\uF8FF]/u.test(cell.char) ? 'terminal-symbol' : undefined;
+  const codePoint = cell.char.codePointAt(0) ?? -1;
+  const isPrivateUse = (codePoint >= 0xE000 && codePoint <= 0xF8FF)
+    || (codePoint >= 0xF0000 && codePoint <= 0xFFFFD)
+    || (codePoint >= 0x100000 && codePoint <= 0x10FFFD);
+  return isPrivateUse ? 'terminal-symbol' : undefined;
 }
 
 function logoColorToAnsi(value: string): string {

@@ -21,6 +21,13 @@ describe('terminal-cell preview semantics', () => {
     expect(terminalGridText(grid)).toEqual(['12345ab890']);
   });
 
+  test('keeps supplementary private-use icons in one terminal cell', () => {
+    const icon = '\u{f0fb2}';
+    const grid = renderTerminalStream(`A${icon}B`, 20);
+    expect(grid.cells[0]?.slice(0, 3).map((cell) => cell.char)).toEqual(['A', icon, 'B']);
+    expect(terminalGridText(grid)).toEqual([`A${icon}B`]);
+  });
+
   test('resolves automatic logos from the active sample without changing export semantics', () => {
     const logo = { type: 'auto' as const };
     expect(resolvePreviewLogoName(logo, kaliPreviewProfile)).toBe('Kali');

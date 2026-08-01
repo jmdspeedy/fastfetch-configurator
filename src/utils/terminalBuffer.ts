@@ -168,7 +168,9 @@ export function renderTerminalStream(stream: string, columns = 120, rows = 200):
     osc.lastIndex = index;
     const oscMatch = osc.exec(stream);
     if (oscMatch) { index = osc.lastIndex; continue; }
-    const character = stream[index];
+    const codePoint = stream.codePointAt(index) ?? 0;
+    const character = String.fromCodePoint(codePoint);
+    const characterLength = character.length;
     if (character === '\x1b' && stream[index + 1] === '7') {
       savedCursor = { x, y };
       index += 2;
@@ -186,12 +188,12 @@ export function renderTerminalStream(stream: string, columns = 120, rows = 200):
     if (character === '\n') { moveRow(1); x = 0; wrapPending = false; index += 1; continue; }
     if (character === '\b') { x = Math.max(0, x - 1); wrapPending = false; index += 1; continue; }
     if (character === '\t') { x = Math.min(width - 1, x + (8 - (x % 8))); index += 1; continue; }
-    if (character < ' ') { index += 1; continue; }
+    if (codePoint < 0x20) { index += characterLength; continue; }
     if (wrapPending) { x = 0; moveRow(1); wrapPending = false; }
     cells[y][x] = { char: character, ...style };
     if (x === width - 1) wrapPending = true;
     else x += 1;
-    index += 1;
+    index += characterLength;
   }
 
   let lastRow = 0;
