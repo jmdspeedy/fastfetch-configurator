@@ -41,7 +41,7 @@ export default function HeaderControls() {
       {/* Deploy Button */}
       <button
         onClick={() => setShowDeployModal(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
+        className="flex appearance-none items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-md hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
       >
         <Download size={18} />
         <span>Deploy Config</span>
