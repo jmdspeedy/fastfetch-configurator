@@ -113,7 +113,7 @@ export default function TerminalPreview() {
   const unsupportedFeatures = [...new Set([...model.unsupportedFeatures, ...previewSupport.features])];
 
   return (
-    <div className="bg-black rounded-lg border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm min-h-[280px] max-h-[calc(100vh-11rem)] flex flex-col">
+    <div className="bg-black rounded-lg border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm min-h-[280px] max-h-[calc(100vh-11rem)] xl:h-full flex flex-col">
       <div className="bg-[#2d2d2d] px-4 py-2 flex items-center gap-2 border-b border-gray-800">
         <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-[#ff5f56]" /><div className="w-3 h-3 rounded-full bg-[#ffbd2e]" /><div className="w-3 h-3 rounded-full bg-[#27c93f]" /></div>
         <div className="flex-1 text-center text-gray-400 text-xs">preview@fastfetch-config: ~</div>

@@ -31,8 +31,8 @@ export default function Home() {
       </header>
 
       {/* Editor workspace: a flexible preview between independently scrollable control rails. */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] xl:grid-cols-[minmax(250px,280px)_minmax(0,1fr)_minmax(220px,240px)] xl:gap-5 items-start">
-        <section className="min-w-0 order-1 xl:order-none xl:col-start-2 xl:row-start-1 xl:sticky xl:top-6">
+      <div className="flex-1 min-h-0 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] xl:grid-cols-[minmax(250px,280px)_minmax(0,1fr)_minmax(220px,240px)] xl:gap-5 items-start xl:items-stretch">
+        <section className="min-w-0 order-1 xl:order-none xl:col-start-2 xl:row-start-1 xl:sticky xl:top-6 xl:h-[calc(100vh-11rem)]">
           <TerminalPreview />
         </section>
 

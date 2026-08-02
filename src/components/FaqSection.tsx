@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { ArrowUpRight, CircleHelp, ChevronDown, ExternalLink } from 'lucide-react';
 
 const inlineCodeClassName = 'rounded bg-black/50 px-1.5 py-0.5 font-mono text-[0.9em] text-blue-300';
@@ -59,6 +62,8 @@ const faqItems = [
 ] as const;
 
 export default function FaqSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
   return (
     <section
       aria-labelledby="faq-title"
@@ -79,18 +84,42 @@ export default function FaqSection() {
         </div>
 
         <div className="divide-y divide-gray-800/80">
-          {faqItems.map((item, index) => (
-            <details key={item.question} className="group" open={index === 0}>
-              <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-5 text-left transition-colors hover:bg-gray-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/80 motion-reduce:transition-none sm:px-8">
-                <span className="w-7 shrink-0 font-mono text-xs text-gray-600">{String(index + 1).padStart(2, '0')}</span>
-                <span className="flex-1 text-sm font-semibold text-gray-200 sm:text-base">{item.question}</span>
-                <ChevronDown className="h-5 w-5 shrink-0 text-gray-500 transition-transform duration-300 group-open:rotate-180 group-open:text-blue-400 motion-reduce:transition-none" aria-hidden="true" />
-              </summary>
-              <div className="px-5 pb-6 pl-16 text-sm leading-7 text-gray-400 sm:px-8 sm:pb-7 sm:pl-[4.75rem]">
-                <div className="max-w-3xl">{item.answer}</div>
+          {faqItems.map((item, index) => {
+            const isOpen = openIndex === index;
+            const questionId = `faq-question-${index}`;
+            const answerId = `faq-answer-${index}`;
+
+            return (
+              <div key={item.question} className="group">
+                <button
+                  id={questionId}
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={answerId}
+                  onClick={() => setOpenIndex((current) => (current === index ? null : index))}
+                  className={`flex w-full cursor-pointer items-center gap-4 px-5 py-5 text-left transition-colors hover:bg-gray-900/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/80 motion-reduce:transition-none sm:px-8 ${isOpen ? 'bg-gray-900/30' : ''}`}
+                >
+                  <span className="w-7 shrink-0 font-mono text-xs text-gray-600">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="flex-1 text-sm font-semibold text-gray-200 sm:text-base">{item.question}</span>
+                  <ChevronDown className={`h-5 w-5 shrink-0 text-gray-500 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180 text-blue-400' : ''}`} aria-hidden="true" />
+                </button>
+
+                <div
+                  id={answerId}
+                  role="region"
+                  aria-labelledby={questionId}
+                  aria-hidden={!isOpen}
+                  className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <div className={`px-5 pb-6 pl-16 text-sm leading-7 text-gray-400 transition-[opacity,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-none sm:px-8 sm:pb-7 sm:pl-[4.75rem] ${isOpen ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'}`}>
+                      <div className="max-w-3xl">{item.answer}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </details>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex flex-col gap-4 border-t border-gray-800 bg-black/10 p-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
