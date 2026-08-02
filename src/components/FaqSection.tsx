@@ -61,9 +61,8 @@ const faqItems = [
 export default function FaqSection() {
   return (
     <section
-      id="faq"
       aria-labelledby="faq-title"
-      className="scroll-mt-6 mt-12 border-t border-gray-800 pt-12 max-w-4xl mx-auto pb-12"
+      className="mx-auto max-w-4xl pb-12"
     >
       <div className="overflow-hidden rounded-2xl border border-gray-800 bg-[#161616]/90 shadow-2xl shadow-black/20">
         <div className="flex flex-col gap-5 border-b border-gray-800 p-6 sm:flex-row sm:items-start sm:p-8">

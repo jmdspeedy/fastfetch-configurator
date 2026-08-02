@@ -19,7 +19,7 @@ export default function HeaderControls() {
   return (
     <div className="flex items-center gap-3">
       <a
-        href="#faq"
+        href="/faq"
         aria-label="View FAQ"
         className="flex items-center gap-2 px-3 py-2 text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] motion-reduce:transition-none"
         title="View FAQ"

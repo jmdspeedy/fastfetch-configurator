@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check, Loader2, RefreshCw, ChevronLeft, Monitor } from 'lucide-react';
 import { useConfigStore } from '@/store/config';
 import { detectClientPlatform } from '@/utils/platform';
 
 interface WelcomeScreenProps {
     onComplete: () => void;
-    onViewFaq?: () => void;
 }
 
 interface Template {
@@ -21,7 +21,7 @@ interface GitHubContentItem {
     type: string;
 }
 
-export default function WelcomeScreen({ onComplete, onViewFaq }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     const [importMode, setImportMode] = useState(false);
     const [templateMode, setTemplateMode] = useState(false);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -309,20 +309,17 @@ export default function WelcomeScreen({ onComplete, onViewFaq }: WelcomeScreenPr
                         </div>
                         </div>
 
-                        {onViewFaq && (
-                            <div className="relative mt-8 flex justify-center">
-                                <button
-                                    type="button"
-                                    onClick={onViewFaq}
-                                    className="group inline-flex items-center gap-2 rounded-full border border-gray-800 bg-black/20 px-4 py-2 text-sm text-gray-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] motion-reduce:transition-none"
-                                >
-                                    <CircleHelp className="h-4 w-4" aria-hidden="true" />
-                                    Need a quick answer?
-                                    <span className="text-gray-600 group-hover:text-blue-400">Browse FAQ</span>
-                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
-                                </button>
-                            </div>
-                        )}
+                        <div className="relative mt-8 flex justify-center">
+                            <Link
+                                href="/faq"
+                                className="group inline-flex items-center gap-2 rounded-full border border-gray-800 bg-black/20 px-4 py-2 text-sm text-gray-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] motion-reduce:transition-none"
+                            >
+                                <CircleHelp className="h-4 w-4" aria-hidden="true" />
+                                Need a quick answer?
+                                <span className="text-gray-600 group-hover:text-blue-400">Browse FAQ</span>
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                            </Link>
+                        </div>
                     </>
                 ) : templateMode ? (
                     // Template Selection Mode

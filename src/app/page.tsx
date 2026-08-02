@@ -7,23 +7,16 @@ import TerminalPreview from '@/components/TerminalPreview';
 import AppearanceControls from '@/components/AppearanceControls';
 import HeaderControls from '@/components/HeaderControls';
 import WelcomeScreen from '@/components/WelcomeScreen';
-import FaqSection from '@/components/FaqSection';
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
 
-  const handleViewFaq = () => {
-    setShowWelcome(false);
-    requestAnimationFrame(() => {
-      document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  };
+  if (showWelcome) {
+    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
+  }
 
   return (
-    <>
-      {showWelcome && <WelcomeScreen onComplete={() => setShowWelcome(false)} onViewFaq={handleViewFaq} />}
-
-      <main id="editor" className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
+    <main id="editor" className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-800 pb-6">
         <div className="flex items-center gap-3">
@@ -58,8 +51,6 @@ export default function Home() {
         </div>
       </div>
 
-      <FaqSection />
-      </main>
-    </>
+    </main>
   );
 }
