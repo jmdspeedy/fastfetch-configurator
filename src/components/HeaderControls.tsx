@@ -31,7 +31,7 @@ export default function HeaderControls() {
       {/* Template Button */}
       <button
         onClick={() => setShowTemplateModal(true)}
-        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
+        className="flex appearance-none items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
         title="Load Template"
       >
         <FileCode size={16} />
@@ -41,7 +41,7 @@ export default function HeaderControls() {
       {/* Import Button */}
       <button
         onClick={() => setShowImportModal(true)}
-        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
+        className="flex appearance-none items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
         title="Import Config"
       >
         <Upload size={16} />
@@ -59,7 +59,7 @@ export default function HeaderControls() {
 
       <button
         onClick={() => setShowJsonPreview(true)}
-        className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
+        className="flex appearance-none items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-md hover:bg-gray-700 hover:border-gray-600 transition-all"
         title="View generated config"
       >
         <Braces size={16} />
