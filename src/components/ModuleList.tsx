@@ -48,29 +48,29 @@ function SortableItem({ id, type, onDelete, onEdit }: { id: string; type: string
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 bg-gray-800 p-3 rounded-md mb-2 border border-gray-700 group hover:border-blue-500 transition-colors"
+      className="flex items-center gap-2 bg-gray-800 p-2 rounded-md mb-1.5 border border-gray-700 group hover:border-blue-500 transition-colors"
     >
       <div {...attributes} {...listeners} className="cursor-grab text-gray-500 hover:text-gray-300">
-        <GripVertical size={18} />
+        <GripVertical size={14} />
       </div>
-      <div className="flex-1 font-mono text-sm text-gray-200 truncate">
+      <div className="flex-1 min-w-0 font-mono text-xs text-gray-200 truncate">
         {type}
       </div>
 
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
         <button
           onClick={onEdit}
           className="p-1 text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 rounded transition-colors"
           title="Edit Module"
         >
-          <Settings size={16} />
+          <Settings size={14} />
         </button>
         <button
           onClick={onDelete}
           className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
           title="Remove Module"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
       </div>
     </div>
@@ -120,12 +120,12 @@ export default function ModuleList() {
 
   return (
     <>
-      <div className="flex flex-col h-full gap-4">
+      <div className="flex flex-col h-full min-h-0 gap-3">
         {/* Add Module Search/Trigger */}
         <div ref={wrapperRef} className="relative">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-2 top-2.5 text-gray-500" />
+              <Search size={14} className="absolute left-2 top-2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Add module..."
@@ -135,14 +135,14 @@ export default function ModuleList() {
                   setShowAddMenu(true);
                 }}
                 onFocus={() => setShowAddMenu(true)}
-                className="w-full bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-md pl-8 pr-2 py-2 focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-900 border border-gray-700 text-gray-300 text-[11px] rounded-md pl-7 pr-2 py-1.5 focus:outline-none focus:border-blue-500"
               />
             </div>
             <button
               onClick={() => setShowAddMenu(!showAddMenu)}
-              className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              <Plus size={16} />
+              <Plus size={14} />
             </button>
           </div>
 
@@ -158,7 +158,7 @@ export default function ModuleList() {
                         setShowAddMenu(false);
                         setSearchTerm('');
                       }}
-                      className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-blue-600 hover:text-white rounded transition-colors"
+                      className="w-full text-left px-2 py-1.5 text-[11px] text-gray-300 hover:bg-blue-600 hover:text-white rounded transition-colors"
                     >
                       {type}
                     </button>

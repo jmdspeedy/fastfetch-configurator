@@ -834,7 +834,7 @@ export function buildPreviewModel(
   const diagnostics: PreviewDiagnostic[] = [];
   const unsupportedFeatures: string[] = [];
   if (!profile.label.toLowerCase().includes('capture')) {
-    diagnostics.push({ level: 'info', message: `Deterministic ${profile.label} sample; load a native Fastfetch JSON capture for host-exact values` });
+    diagnostics.push({ level: 'info', message: `Detected ${profile.label} preview uses representative values; load a native Fastfetch JSON capture for host-exact values` });
   }
   if (['sixel', 'kitty', 'kitty-direct', 'kitty-icat', 'iterm', 'chafa'].includes(String(logo.type)) && !logo._customContent) {
     const message = `${logo.type} logo protocol requires a native terminal or loaded capture`;

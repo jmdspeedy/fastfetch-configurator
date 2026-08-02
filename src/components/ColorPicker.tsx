@@ -27,7 +27,7 @@ export default function ColorPicker({ label, value = 'default', onChange }: Colo
             <label className="text-xs text-gray-400 font-medium">{label}</label>
 
             {/* Preset Colors */}
-            <div className="flex flex-wrap gap-2 mb-1">
+            <div className="flex flex-wrap gap-1 mb-1">
                 {PRESET_COLORS.map(c => (
                     <button
                         key={c}

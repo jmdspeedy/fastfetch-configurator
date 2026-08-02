@@ -1,19 +1,16 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useConfigStore, LogoConfig } from '@/store/config';
 import { getLogoData, resolvePreviewLogoName } from '@/utils/logos';
 import { buildPreviewModel } from '@/utils/fastfetchPreview';
-import { kaliPreviewProfile, previewProfiles, PreviewProfile } from '@/data/previewProfiles';
+import { previewProfiles, PreviewProfile, PreviewPlatform } from '@/data/previewProfiles';
 import { getCaptureCommand, parseFastfetchCapture } from '@/utils/fastfetchCapture';
 import { renderTerminalStream, TerminalCell, TerminalGrid } from '@/utils/terminalBuffer';
+import { detectClientPlatform } from '@/utils/platform';
 
-const SAMPLE_PROFILES: Array<{ id: string; profile: PreviewProfile }> = [
-  { id: 'linux', profile: previewProfiles.linux },
-  { id: 'kali', profile: kaliPreviewProfile },
-  { id: 'windows', profile: previewProfiles.windows },
-  { id: 'macos', profile: previewProfiles.macos },
-];
+const subscribeToPlatform = () => () => undefined;
+const getServerPlatform = (): PreviewPlatform => 'linux';
 
 const COLOR_VALUES: Record<string, string> = {
   black: '#111827', red: '#ef4444', green: '#22c55e', yellow: '#eab308', blue: '#3b82f6',
@@ -97,12 +94,15 @@ function mergePreviewGrids(moduleGrid: TerminalGrid, logoGrid: TerminalGrid, pos
 
 export default function TerminalPreview() {
   const { modules, logo, display, general, previewSupport, loadError } = useConfigStore();
-  const [sampleId, setSampleId] = useState('linux');
   const [capture, setCapture] = useState<PreviewProfile | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [terminalColumns, setTerminalColumns] = useState(100);
   const captureInputRef = useRef<HTMLInputElement>(null);
-  const activeProfile = capture || SAMPLE_PROFILES.find((sample) => sample.id === sampleId)?.profile || previewProfiles.linux;
+  const detectedPlatform = useSyncExternalStore(subscribeToPlatform, detectClientPlatform, getServerPlatform);
+  const detectedProfile = useMemo(() => detectedPlatform === 'linux'
+    ? { ...previewProfiles.linux, label: 'Linux', logoName: 'Linux' }
+    : previewProfiles[detectedPlatform], [detectedPlatform]);
+  const activeProfile = capture || detectedProfile || previewProfiles.linux;
   const model = useMemo(() => buildPreviewModel(modules, logo, display, activeProfile, general), [modules, logo, display, activeProfile, general]);
   const terminal = useMemo(() => {
     const moduleGrid = renderTerminalStream(model.terminalStream, terminalColumns);
@@ -113,16 +113,11 @@ export default function TerminalPreview() {
   const unsupportedFeatures = [...new Set([...model.unsupportedFeatures, ...previewSupport.features])];
 
   return (
-    <div className="bg-black rounded-lg border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm h-full min-h-[520px] flex flex-col">
+    <div className="bg-black rounded-lg border border-gray-700 shadow-2xl overflow-hidden font-mono text-sm min-h-[280px] max-h-[calc(100vh-11rem)] flex flex-col">
       <div className="bg-[#2d2d2d] px-4 py-2 flex items-center gap-2 border-b border-gray-800">
         <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-[#ff5f56]" /><div className="w-3 h-3 rounded-full bg-[#ffbd2e]" /><div className="w-3 h-3 rounded-full bg-[#27c93f]" /></div>
-        <div className="flex-1 text-center text-gray-400 text-xs">sample@fastfetch-config: ~</div>
+        <div className="flex-1 text-center text-gray-400 text-xs">preview@fastfetch-config: ~</div>
         <div className="flex items-center gap-2">
-          {!capture && <label className="text-[10px] text-gray-500 flex items-center gap-1">Sample
-            <select value={sampleId} onChange={(event) => setSampleId(event.target.value)} className="bg-[#252525] text-gray-300 border border-gray-600 rounded px-1 py-0.5">
-              {SAMPLE_PROFILES.map(({ id, profile }) => <option key={id} value={id}>{profile.label}</option>)}
-            </select>
-          </label>}
           {capture && <span className="text-[10px] text-emerald-300">{activeProfile.label}</span>}
           <label className="text-[10px] text-gray-500 flex items-center gap-1">Cols
             <select value={terminalColumns} onChange={(event) => setTerminalColumns(Number(event.target.value))} className="bg-[#252525] text-gray-300 border border-gray-600 rounded px-1 py-0.5">
@@ -141,11 +136,11 @@ export default function TerminalPreview() {
             event.target.value = '';
           }} />
           <button type="button" title={`Run ${getCaptureCommand(activeProfile.id)}, then load the JSON file`} onClick={() => captureInputRef.current?.click()} className="text-[10px] text-gray-400 hover:text-white border border-gray-600 rounded px-1.5 py-0.5">Load capture</button>
-          {capture && <button type="button" onClick={() => setCapture(null)} className="text-[10px] text-gray-400 hover:text-white border border-gray-600 rounded px-1.5 py-0.5">Sample</button>}
+          {capture && <button type="button" onClick={() => setCapture(null)} className="text-[10px] text-gray-400 hover:text-white border border-gray-600 rounded px-1.5 py-0.5">Detected</button>}
         </div>
       </div>
 
-      <div className="p-5 overflow-auto custom-scrollbar flex-1">
+      <div className="p-5 overflow-auto custom-scrollbar flex-1 min-h-0">
         {loadError ? (
           <div className="rounded border border-red-700/60 bg-red-950/30 p-4 text-sm text-red-200">
             <div className="font-semibold">Configuration could not be imported</div>

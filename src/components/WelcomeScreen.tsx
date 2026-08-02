@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { FileCode, Upload, CircleHelp, ArrowRight, Copy, Check, Loader2, RefreshCw, ChevronLeft, Monitor } from 'lucide-react';
 import { useConfigStore } from '@/store/config';
+import { detectClientPlatform } from '@/utils/platform';
 
 interface WelcomeScreenProps {
     onComplete: () => void;
@@ -48,11 +49,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     }, []);
 
     useEffect(() => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        if (userAgent.includes('mac')) setOsType('macos');
-        else if (userAgent.includes('win')) setOsType('windows');
-        else if (userAgent.includes('linux')) setOsType('linux');
-        else setOsType('unknown');
+        setOsType(detectClientPlatform());
     }, []);
 
     const getCopyCommand = () => {

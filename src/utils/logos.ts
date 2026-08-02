@@ -70,7 +70,7 @@ export const getLogoColor = (name: string): string => {
   return 'text-gray-200';
 };
 
-/** Resolve Fastfetch's automatic logo against the active deterministic profile. */
+/** Resolve Fastfetch's automatic logo against the active detected or captured profile. */
 export const resolvePreviewLogoName = (logo: LogoConfig, profile: PreviewProfile): string | undefined => {
   if (logo.type === 'none') return undefined;
   if (logo.type === 'auto') return profile.logoName || profile.distribution || (profile.id === 'macos' ? 'macOS' : profile.id === 'windows' ? 'Windows 11' : 'Linux');

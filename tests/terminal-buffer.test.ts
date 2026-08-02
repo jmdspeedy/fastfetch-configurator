@@ -28,7 +28,7 @@ describe('terminal-cell preview semantics', () => {
     expect(terminalGridText(grid)).toEqual([`A${icon}B`]);
   });
 
-  test('resolves automatic logos from the active sample without changing export semantics', () => {
+  test('resolves automatic logos from the active preview profile without changing export semantics', () => {
     const logo = { type: 'auto' as const };
     expect(resolvePreviewLogoName(logo, kaliPreviewProfile)).toBe('Kali');
     expect(buildConfigDocument([], logo, {}).logo).toEqual({ type: 'auto' });

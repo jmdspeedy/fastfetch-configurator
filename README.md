@@ -29,7 +29,7 @@ An interactive, visual editor for building and deploying [Fastfetch](https://git
     -   Choose **One-Line Install** to get a `curl` command.
     -   Run the command in your terminal to apply the settings.
 
-The preview starts with deterministic Linux, Windows, and macOS sample profiles and uses the Fastfetch 2.66.0 schema/export contract. Use **Load capture** in the terminal preview after running `fastfetch --config ~/.config/fastfetch/config.jsonc --format json > fastfetch-capture.json` (the button tooltip shows the PowerShell equivalent). Native captures are normalized from Fastfetch's nested JSON values (units, display scaling, repeated devices, and camelCase fields) before rendering.
+The preview detects the browser's Linux, Windows, or macOS platform and uses a representative profile with the Fastfetch 2.66.0 schema/export contract. Use **Load capture** in the terminal preview after running `fastfetch --config ~/.config/fastfetch/config.jsonc --format json > fastfetch-capture.json` (the button tooltip shows the PowerShell equivalent). Native captures are normalized from Fastfetch's nested JSON values (units, display scaling, repeated devices, and camelCase fields) before rendering.
 
 ## 📄 License
 

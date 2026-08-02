@@ -30,20 +30,24 @@ export default function Home() {
         <HeaderControls />
       </header>
 
-      {/* Main Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 items-start">
-
-        {/* Preview is the primary surface; controls remain available beside it. */}
-        <div className="lg:col-span-8 flex flex-col min-h-0 order-first">
+      {/* Editor workspace: a flexible preview between independently scrollable control rails. */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] xl:grid-cols-[minmax(250px,280px)_minmax(0,1fr)_minmax(220px,240px)] xl:gap-5 items-start">
+        <section className="min-w-0 order-1 xl:order-none xl:col-start-2 xl:row-start-1 xl:sticky xl:top-6">
           <TerminalPreview />
-        </div>
+        </section>
 
-        <div className="lg:col-span-4 flex flex-col gap-6 min-h-0">
-          <div className="bg-[#1e1e1e] p-4 rounded-lg border border-gray-800 shadow-lg overflow-hidden flex flex-col min-h-[300px]">
-            <h2 className="text-lg font-semibold mb-4 text-white">Modules</h2>
-            <div className="flex-1 overflow-hidden"><ModuleList /></div>
-          </div>
-          <AppearanceControls />
+        {/* At laptop widths the rails share one column; at wide desktop they flank the preview. */}
+        <div className="min-w-0 order-2 flex flex-col gap-4 lg:min-h-0 xl:contents">
+          <aside className="min-w-0 xl:col-start-1 xl:row-start-1 xl:h-[calc(100vh-11rem)]">
+            <AppearanceControls />
+          </aside>
+
+          <aside className="min-w-0 xl:col-start-3 xl:row-start-1 xl:h-[calc(100vh-11rem)]">
+            <div className="bg-[#1e1e1e] p-3 rounded-lg border border-gray-800 shadow-lg overflow-hidden flex flex-col min-h-[300px] xl:h-full xl:min-h-0">
+              <h2 className="text-sm font-semibold mb-3 text-white">Modules</h2>
+              <div className="flex-1 min-h-0 overflow-hidden"><ModuleList /></div>
+            </div>
+          </aside>
         </div>
       </div>
 
