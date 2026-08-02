@@ -7,16 +7,23 @@ import TerminalPreview from '@/components/TerminalPreview';
 import AppearanceControls from '@/components/AppearanceControls';
 import HeaderControls from '@/components/HeaderControls';
 import WelcomeScreen from '@/components/WelcomeScreen';
+import FaqSection from '@/components/FaqSection';
 
 export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
 
-  if (showWelcome) {
-    return <WelcomeScreen onComplete={() => setShowWelcome(false)} />;
-  }
+  const handleViewFaq = () => {
+    setShowWelcome(false);
+    requestAnimationFrame(() => {
+      document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   return (
-    <main className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
+    <>
+      {showWelcome && <WelcomeScreen onComplete={() => setShowWelcome(false)} onViewFaq={handleViewFaq} />}
+
+      <main id="editor" className="min-h-screen bg-[#111111] text-gray-200 p-6 flex flex-col gap-6">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-gray-800 pb-6">
         <div className="flex items-center gap-3">
@@ -51,28 +58,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* SEO Content Section */}
-      <section className="mt-12 border-t border-gray-800 pt-12 max-w-4xl mx-auto pb-12">
-        <h2 className="text-xl font-bold mb-6 text-white text-center">Fastfetch Configuration FAQ</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-gray-400 text-sm">
-          <div>
-            <h3 className="text-blue-400 font-semibold mb-2">What is a Fastfetch Configurator?</h3>
-            <p>It is a visual tool that helps Linux users generate a <code>config.jsonc</code> file for Fastfetch. Instead of manually editing code in a terminal, you can use our interactive editor to customize your system fetch display with a real-time preview.</p>
-          </div>
-          <div>
-            <h3 className="text-blue-400 font-semibold mb-2">How do I change the Fastfetch logo?</h3>
-            <p>Our generator includes a logo gallery with over 100 built-in distribution icons (Arch, Fedora, Ubuntu, etc.). You can also upload custom images which are converted into ASCII art optimized for your terminal size.</p>
-          </div>
-          <div>
-            <h3 className="text-blue-400 font-semibold mb-2">How do I install the generated config?</h3>
-            <p>Simply click &quot;Deploy Config&quot; and run the generated one-line command in your terminal. It handles the <code>mkdir</code> and file placement for <code>~/.config/fastfetch/config.jsonc</code> automatically.</p>
-          </div>
-          <div>
-            <h3 className="text-blue-400 font-semibold mb-2">Fastfetch vs Neofetch?</h3>
-            <p>Fastfetch is a modern, high-performance replacement for Neofetch, written in C. It is significantly faster and supports more modern protocols like Sixel and Kitty graphics for logos.</p>
-          </div>
-        </div>
-      </section>
-    </main>
+      <FaqSection />
+      </main>
+    </>
   );
 }

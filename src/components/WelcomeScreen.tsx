@@ -6,6 +6,7 @@ import { detectClientPlatform } from '@/utils/platform';
 
 interface WelcomeScreenProps {
     onComplete: () => void;
+    onViewFaq?: () => void;
 }
 
 interface Template {
@@ -20,7 +21,7 @@ interface GitHubContentItem {
     type: string;
 }
 
-export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onComplete, onViewFaq }: WelcomeScreenProps) {
     const [importMode, setImportMode] = useState(false);
     const [templateMode, setTemplateMode] = useState(false);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -228,7 +229,8 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                 </div>
 
                 {!importMode && !templateMode ? (
-                    <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto relative">
+                    <>
+                        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto relative">
                         {/* Option 1: Template */}
                         <button
                             onClick={handleEnterTemplateMode}
@@ -305,7 +307,23 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
                                 Import existing <ArrowRight className="w-4 h-4 ml-2" />
                             </div>
                         </div>
-                    </div>
+                        </div>
+
+                        {onViewFaq && (
+                            <div className="relative mt-8 flex justify-center">
+                                <button
+                                    type="button"
+                                    onClick={onViewFaq}
+                                    className="group inline-flex items-center gap-2 rounded-full border border-gray-800 bg-black/20 px-4 py-2 text-sm text-gray-400 transition-colors hover:border-blue-500/40 hover:bg-blue-500/10 hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a] motion-reduce:transition-none"
+                                >
+                                    <CircleHelp className="h-4 w-4" aria-hidden="true" />
+                                    Need a quick answer?
+                                    <span className="text-gray-600 group-hover:text-blue-400">Browse FAQ</span>
+                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : templateMode ? (
                     // Template Selection Mode
                     <div className="max-w-4xl mx-auto bg-[#161616] border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-300 flex flex-col h-[500px]">

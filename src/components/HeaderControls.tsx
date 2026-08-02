@@ -1,7 +1,7 @@
 'use client';
 
 import { useConfigStore } from '@/store/config';
-import { Download, RotateCcw, FileCode, Upload, Braces } from 'lucide-react';
+import { Download, RotateCcw, FileCode, Upload, Braces, CircleHelp } from 'lucide-react';
 import { useState } from 'react';
 import TemplateModal from '@/components/modals/TemplateModal';
 import ImportModal from '@/components/modals/ImportModal';
@@ -18,6 +18,16 @@ export default function HeaderControls() {
 
   return (
     <div className="flex items-center gap-3">
+      <a
+        href="#faq"
+        aria-label="View FAQ"
+        className="flex items-center gap-2 px-3 py-2 text-gray-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] motion-reduce:transition-none"
+        title="View FAQ"
+      >
+        <CircleHelp size={16} />
+        <span className="hidden xl:inline">FAQ</span>
+      </a>
+
       {/* Template Button */}
       <button
         onClick={() => setShowTemplateModal(true)}
